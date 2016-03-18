@@ -24,6 +24,10 @@ private slots:
 
 	void plotGraph();
 
+	void on_btnFile_clicked();
+
+	void on_btnPlot_clicked();
+
 private:
 	Ui::MainWindow *ui;
 };

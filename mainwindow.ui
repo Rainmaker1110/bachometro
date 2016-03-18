@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="btnCapturar">
     <property name="geometry">
      <rect>
-      <x>290</x>
+      <x>450</x>
       <y>10</y>
       <width>75</width>
       <height>23</height>
@@ -30,7 +30,7 @@
    <widget class="QPushButton" name="btnDetener">
     <property name="geometry">
      <rect>
-      <x>380</x>
+      <x>530</x>
       <y>10</y>
       <width>75</width>
       <height>23</height>
@@ -92,12 +92,12 @@
      <string>Nombre de archivo:</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lneArchivo">
+   <widget class="QLineEdit" name="leFile">
     <property name="geometry">
      <rect>
       <x>140</x>
       <y>10</y>
-      <width>131</width>
+      <width>191</width>
       <height>20</height>
      </rect>
     </property>
@@ -110,6 +110,32 @@
       <width>691</width>
       <height>381</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnFile">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>10</y>
+      <width>71</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Archivo...</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnPlot">
+    <property name="geometry">
+     <rect>
+      <x>450</x>
+      <y>40</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Graficar</string>
     </property>
    </widget>
   </widget>

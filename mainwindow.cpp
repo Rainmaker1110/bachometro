@@ -4,6 +4,9 @@
 
 #include <QDebug>
 #include <QDateTime>
+
+#include <QFileDialog>
+
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 
@@ -23,6 +26,7 @@ typedef struct sensor_data
 {
 	long long int timestamp;
 	int value;
+	//bool pot_hole;
 } sensor_data;
 
 bool capture;
@@ -38,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
-	ui->lneArchivo->setText("C:\\datos01-01.dat");
+	ui->leFile->setText("C:\\datos01-01.dat");
 
 	capture = false;
 	capturer = NULL;
@@ -95,7 +99,7 @@ void MainWindow::on_btnDetener_clicked()
 		timer->stop();
 		delete timer;
 
-		file = fopen(ui->lneArchivo->text().toStdString().c_str(), "wb");
+		file = fopen(ui->leFile->text().toStdString().c_str(), "wb");
 
 		fwrite(sensor, sizeof(sensor_data), index, file);
 
@@ -161,5 +165,63 @@ void MainWindow::capture_data()
 void MainWindow::plotGraph()
 {
 	ui->customPlot->graph(0)->setData(xData, yData);
+	ui->customPlot->replot();
+}
+
+void MainWindow::on_btnFile_clicked()
+{
+	QString fileString;
+
+	fileString = QFileDialog::getOpenFileName(this, "Selecciona un archivo...", QDir::rootPath(), tr("Data (*.dat)"));
+
+	ui->leFile->setText(fileString);
+}
+
+void MainWindow::on_btnPlot_clicked()
+{
+	FILE * file;
+
+	sensor_data * data;
+
+	long long int fsize;
+	int lectures;
+
+	file = fopen(ui->leFile->text().toStdString().c_str(), "rb");
+
+	fseek(file, 0, SEEK_END);
+	fsize = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	lectures = fsize / (long long int) sizeof(sensor_data);
+
+	data = (sensor_data *) malloc(sizeof(sensor_data) * lectures);
+
+	fread(data, sizeof(sensor_data), lectures, file);
+	fclose(file);
+
+	for (int i = 0; i < lectures; i++)
+	{
+		if (data[i].value > 150)
+		{
+			lectures = i;
+		}
+	}
+
+	for (int i = 0; i < lectures; i++)
+	{
+		qDebug() << data[i].timestamp << " - " << data[i].value << endl;
+	}
+
+	QVector<double> x(lectures), y(lectures); // initialize with entries 0..100
+	for (int i=0; i < lectures; ++i)
+	{
+	  x[i] = i; // x goes from -1 to 1
+	  y[i] = data[i].value; // let's plot a quadratic function
+	}
+	// create graph and assign data to it:
+	ui->customPlot->graph(0)->setData(x, y);
+	// set axes ranges, so we see all data:
+	ui->customPlot->xAxis->setRange(0, lectures);
+	ui->customPlot->yAxis->setRange(50, 150);
 	ui->customPlot->replot();
 }
