@@ -24,9 +24,8 @@ QTimer * timer;
 
 typedef struct sensor_data
 {
-	long long int timestamp;
 	int value;
-	//bool pot_hole;
+	bool pothole;
 } sensor_data;
 
 bool capture;
