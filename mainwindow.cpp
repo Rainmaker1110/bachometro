@@ -22,6 +22,9 @@ bool pothole;
 QVector<double> xData(500, 0);
 QVector<double> yData(500, 0);
 
+QVector<double> xPothole(0);
+QVector<double> yPothole(0);
+
 QTimer * timer;
 
 typedef struct sensor_data
@@ -51,10 +54,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	dataIndex = 0;
 
 	ui->customPlot->addGraph();
+	ui->customPlot->addGraph();
+	ui->customPlot->graph(1)->setPen(QPen(Qt::red));
 
 	// give the axes some labels:
-	ui->customPlot->xAxis->setLabel("x");
-	ui->customPlot->yAxis->setLabel("y");
+	ui->customPlot->xAxis->setLabel("Medicion");
+	ui->customPlot->yAxis->setLabel("Valor");
 
 	// set axes ranges, so we see all data:
 	ui->customPlot->xAxis->setRange(0, 400);
@@ -72,6 +77,7 @@ void MainWindow::on_btnCapturar_clicked()
 	if (capturer == NULL)
 	{
 		pothole = false;
+		ui->customPlot->xAxis->setRange(0, 400);
 
 		capture = true;
 		capturer = new std::thread(&MainWindow::capture_data, this);
@@ -146,6 +152,9 @@ void MainWindow::capture_data()
 
 	data = 0;
 
+	xPothole.fill(0, 0);
+	yPothole.fill(0, 0);
+
 	while (serial.waitForReadyRead(5000) && capture)
 	{
 		serial.read((char *) &data, sizeof(unsigned int));
@@ -153,8 +162,15 @@ void MainWindow::capture_data()
 		sensor[dataIndex].value = data & 0xFF; // 0xFFFF
 		sensor[dataIndex].pothole = pothole;
 
+
 		xData[dataIndex] = dataIndex;
 		yData[dataIndex] = sensor[dataIndex].value;
+
+		if (pothole)
+		{
+			xPothole.append(dataIndex);
+			yPothole.append(sensor[dataIndex].value);
+		}
 
 		qDebug() << xData[dataIndex] << " " << yData[dataIndex] << endl;
 
@@ -170,6 +186,7 @@ void MainWindow::capture_data()
 void MainWindow::plotGraph()
 {
 	ui->customPlot->graph(0)->setData(xData, yData);
+	ui->customPlot->graph(1)->setData(xPothole, yPothole);
 	ui->customPlot->replot();
 }
 
@@ -198,33 +215,33 @@ void MainWindow::on_btnPlot_clicked()
 	fseek(file, 0, SEEK_SET);
 
 	lectures = fsize / (long long int) sizeof(sensor_data);
-
+	qDebug() << lectures << endl;
 	data = (sensor_data *) malloc(sizeof(sensor_data) * lectures);
 
 	fread(data, sizeof(sensor_data), lectures, file);
 	fclose(file);
 
-	for (int i = 0; i < lectures; i++)
-	{
-		if (data[i].value > 150)
-		{
-			lectures = i;
-		}
-	}
+	QVector<double> x(lectures);
+	QVector<double> y(lectures); // initialize with entries 0..100
+
+	xPothole.fill(0, lectures);
+	yPothole.fill(0, lectures);
 
 	for (int i = 0; i < lectures; i++)
 	{
 		qDebug() << data[i].pothole << " - " << data[i].value << endl;
-	}
+		x[i] = i; // x goes from -1 to 1
+		y[i] = data[i].value; // let's plot a quadratic function
 
-	QVector<double> x(lectures), y(lectures); // initialize with entries 0..100
-	for (int i=0; i < lectures; ++i)
-	{
-	  x[i] = i; // x goes from -1 to 1
-	  y[i] = data[i].value; // let's plot a quadratic function
+		if (data[i].pothole)
+		{
+			xPothole[i] = i;
+			yPothole[i] = data[i].value;
+		}
 	}
 	// create graph and assign data to it:
 	ui->customPlot->graph(0)->setData(x, y);
+	ui->customPlot->graph(1)->setData(xPothole, yPothole);
 	// set axes ranges, so we see all data:
 	ui->customPlot->xAxis->setRange(0, lectures);
 	ui->customPlot->yAxis->setRange(50, 150);
