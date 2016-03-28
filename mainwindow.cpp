@@ -17,6 +17,8 @@ using namespace std;
 
 const int MAX_READ = 1024 * 1024;
 
+bool pothole;
+
 QVector<double> xData(500, 0);
 QVector<double> yData(500, 0);
 
@@ -31,7 +33,7 @@ typedef struct sensor_data
 bool capture;
 thread * capturer;
 
-int index;
+int dataIndex;
 sensor_data sensor[MAX_READ];
 
 FILE * file;
@@ -46,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	capture = false;
 	capturer = NULL;
 
-	index = 0;
+	dataIndex = 0;
 
 	ui->customPlot->addGraph();
 
@@ -69,6 +71,8 @@ void MainWindow::on_btnCapturar_clicked()
 {
 	if (capturer == NULL)
 	{
+		pothole = false;
+
 		capture = true;
 		capturer = new std::thread(&MainWindow::capture_data, this);
 
@@ -77,12 +81,11 @@ void MainWindow::on_btnCapturar_clicked()
 
 		timer->setSingleShot(false);
 		timer->start(50);
-	}
-}
 
-void MainWindow::on_btnDetener_clicked()
-{
-	if (capturer != NULL)
+		ui->btnCapturar->setText("Detener");
+		ui->btnPothole->setEnabled(true);
+	}
+	else if (capturer != NULL)
 	{
 		capture = false;
 		capturer->join();
@@ -100,14 +103,17 @@ void MainWindow::on_btnDetener_clicked()
 
 		file = fopen(ui->leFile->text().toStdString().c_str(), "wb");
 
-		fwrite(sensor, sizeof(sensor_data), index, file);
+		fwrite(sensor, sizeof(sensor_data), dataIndex, file);
 
-		index = 0;
+		dataIndex = 0;
 
 		fclose(file);
 
 		xData.fill(0);
 		yData.fill(0);
+
+		ui->btnCapturar->setText("Capturar");
+		ui->btnPothole->setEnabled(false);
 	}
 }
 
@@ -144,17 +150,17 @@ void MainWindow::capture_data()
 	{
 		serial.read((char *) &data, sizeof(unsigned int));
 
-		sensor[index].timestamp = QDateTime::currentMSecsSinceEpoch();
-		sensor[index].value = data & 0xFF; // 0xFFFF
+		sensor[dataIndex].value = data & 0xFF; // 0xFFFF
+		sensor[dataIndex].pothole = pothole;
 
-		xData[index] = index;
-		yData[index] = sensor[index].value;
+		xData[dataIndex] = dataIndex;
+		yData[dataIndex] = sensor[dataIndex].value;
 
-		qDebug() << xData[index] << " " << yData[index] << endl;
+		qDebug() << xData[dataIndex] << " " << yData[dataIndex] << endl;
 
-		qDebug() << sensor[index].timestamp << sensor[index].value << endl;
+		qDebug() << sensor[dataIndex].pothole << sensor[dataIndex].value << endl;
 
-		index++;
+		dataIndex++;
 
 		ui->lblCmNum->setText(QString::number(data));
 		//data &= 255;
@@ -208,7 +214,7 @@ void MainWindow::on_btnPlot_clicked()
 
 	for (int i = 0; i < lectures; i++)
 	{
-		qDebug() << data[i].timestamp << " - " << data[i].value << endl;
+		qDebug() << data[i].pothole << " - " << data[i].value << endl;
 	}
 
 	QVector<double> x(lectures), y(lectures); // initialize with entries 0..100
@@ -223,4 +229,18 @@ void MainWindow::on_btnPlot_clicked()
 	ui->customPlot->xAxis->setRange(0, lectures);
 	ui->customPlot->yAxis->setRange(50, 150);
 	ui->customPlot->replot();
+}
+
+void MainWindow::on_btnPothole_clicked()
+{
+	if (pothole)
+	{
+		ui->btnPothole->setText("Bache");
+	}
+	else
+	{
+		ui->btnPothole->setText("No bache");
+	}
+
+	pothole = !pothole;
 }
