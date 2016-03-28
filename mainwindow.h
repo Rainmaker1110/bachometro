@@ -20,15 +20,15 @@ public:
 private slots:
 	void on_btnCapturar_clicked();
 
-	void on_btnDetener_clicked();
-
 	void plotGraph();
 
 	void on_btnFile_clicked();
 
 	void on_btnPlot_clicked();
 
-private:
+	void on_btnPothole_clicked();
+
+	private:
 	Ui::MainWindow *ui;
 };
 
