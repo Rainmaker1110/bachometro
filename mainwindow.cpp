@@ -224,8 +224,8 @@ void MainWindow::on_btnPlot_clicked()
 	QVector<double> x(lectures);
 	QVector<double> y(lectures); // initialize with entries 0..100
 
-	xPothole.fill(0, lectures);
-	yPothole.fill(0, lectures);
+	xPothole.fill(0, 0);
+	yPothole.fill(0, 0);
 
 	for (int i = 0; i < lectures; i++)
 	{
@@ -235,10 +235,11 @@ void MainWindow::on_btnPlot_clicked()
 
 		if (data[i].pothole)
 		{
-			xPothole[i] = i;
-			yPothole[i] = data[i].value;
+			xPothole.append(i);
+			yPothole.append(data[i].value);
 		}
 	}
+
 	// create graph and assign data to it:
 	ui->customPlot->graph(0)->setData(x, y);
 	ui->customPlot->graph(1)->setData(xPothole, yPothole);
