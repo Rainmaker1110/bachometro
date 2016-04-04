@@ -15,12 +15,12 @@
 
 using namespace std;
 
-const int MAX_READ = 1024 * 1024;
+const int MAX_READ = 1000;
 
 bool pothole;
 
-QVector<double> xData(500, 0);
-QVector<double> yData(500, 0);
+QVector<double> xData(MAX_READ, 0);
+QVector<double> yData(MAX_READ, 0);
 
 QVector<double> xPothole(0);
 QVector<double> yPothole(0);
@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	// set axes ranges, so we see all data:
 	ui->customPlot->xAxis->setRange(0, 400);
-	ui->customPlot->yAxis->setRange(70, 140);
+	ui->customPlot->yAxis->setRange(30, 120);
 	ui->customPlot->replot();
 }
 
@@ -163,8 +163,16 @@ void MainWindow::capture_data()
 		sensor[dataIndex].pothole = pothole;
 
 
-		xData[dataIndex] = dataIndex;
-		yData[dataIndex] = sensor[dataIndex].value;
+		if (dataIndex < MAX_READ)
+		{
+			xData[dataIndex] = dataIndex;
+			yData[dataIndex] = sensor[dataIndex].value;
+		}
+		else
+		{
+			xData.append(dataIndex);
+			yData.append(sensor[dataIndex].value);
+		}
 
 		if (pothole)
 		{
@@ -174,7 +182,7 @@ void MainWindow::capture_data()
 
 		qDebug() << xData[dataIndex] << " " << yData[dataIndex] << endl;
 
-		qDebug() << sensor[dataIndex].pothole << sensor[dataIndex].value << endl;
+		//qDebug() << sensor[dataIndex].pothole << sensor[dataIndex].value << endl;
 
 		dataIndex++;
 
@@ -245,7 +253,7 @@ void MainWindow::on_btnPlot_clicked()
 	ui->customPlot->graph(1)->setData(xPothole, yPothole);
 	// set axes ranges, so we see all data:
 	ui->customPlot->xAxis->setRange(0, lectures);
-	ui->customPlot->yAxis->setRange(50, 150);
+	ui->customPlot->yAxis->setRange(30, 120);
 	ui->customPlot->replot();
 }
 
