@@ -28,7 +28,9 @@ private slots:
 
 	void on_btnPothole_clicked();
 
-	private:
+	void on_btnExport_clicked();
+
+private:
 	Ui::MainWindow *ui;
 };
 

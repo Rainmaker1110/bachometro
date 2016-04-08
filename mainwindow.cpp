@@ -1,3 +1,5 @@
+#include <string>
+
 #include <thread>
 
 #include <QTimer>
@@ -269,4 +271,63 @@ void MainWindow::on_btnPothole_clicked()
 	}
 
 	pothole = !pothole;
+}
+
+void MainWindow::on_btnExport_clicked()
+{
+	FILE * file;
+
+	string filename;
+	string matlab;
+
+	sensor_data * data;
+
+	long long int fsize;
+	int lectures;
+
+	filename = ui->leFile->text().toStdString();
+
+	file = fopen(filename.c_str(), "rb");
+
+	fseek(file, 0, SEEK_END);
+	fsize = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	lectures = fsize / (long long int) sizeof(sensor_data);
+	qDebug() << lectures << endl;
+	data = (sensor_data *) malloc(sizeof(sensor_data) * lectures);
+
+	fread(data, sizeof(sensor_data), lectures, file);
+	fclose(file);
+
+	filename.replace(filename.size() - 4, 2, ".m");
+	filename.resize(filename.size() - 2);
+
+	file = fopen(filename.c_str(), "w");
+
+	matlab = "x = [";
+	for (int i = 0; i < lectures; i++)
+	{
+		matlab += string::to_string(data[i].value);
+
+		if (i < lectures - 1)
+		{
+			matlab += " ";
+		}
+	}
+	matlab += "];\n";
+	matlab += "f = sgolayfilt(x, 3, 31);\n";
+	matlab += "subplot(2, 1, 1)\n";
+	matlab += "[m, n] = size(x);";
+	matlab += "plot(1:n, x)\n";
+	matlab += "axis([0 100 0 120])\n";
+	matlab += "grid\n";
+	matlab += "subplot(2, 1, 2)\n";
+	matlab += "plot(1:n, f)\n";
+	matlab += "axis([0 100 0 120])\n";
+	matlab += "grid";
+
+	fprintf(file, "%s", matlab.c_str());
+
+	fclose(file);
 }
