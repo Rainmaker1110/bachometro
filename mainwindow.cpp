@@ -308,7 +308,7 @@ void MainWindow::on_btnExport_clicked()
 	matlab = "x = [";
 	for (int i = 0; i < lectures; i++)
 	{
-		matlab += string::to_string(data[i].value);
+		matlab += to_string(data[i].value);
 
 		if (i < lectures - 1)
 		{
@@ -316,9 +316,11 @@ void MainWindow::on_btnExport_clicked()
 		}
 	}
 	matlab += "];\n";
-	matlab += "f = sgolayfilt(x, 3, 31);\n";
+	matlab += "[m, n] = size(x);\n";
+	matlab += "if (n % 2) == 0\n";
+	matlab += "m = n + 1\n";
+	matlab += "f = sgolayfilt(x, 3, m);\n";
 	matlab += "subplot(2, 1, 1)\n";
-	matlab += "[m, n] = size(x);";
 	matlab += "plot(1:n, x)\n";
 	matlab += "axis([0 100 0 120])\n";
 	matlab += "grid\n";
