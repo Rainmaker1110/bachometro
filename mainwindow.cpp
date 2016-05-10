@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
-	ui->leFile->setText("C:\\datos01-01.dat");
+	ui->leFile->setText("C:\\datos01_01.dat");
 
 	capture = false;
 	capturer = NULL;
@@ -317,19 +317,32 @@ void MainWindow::on_btnExport_clicked()
 	}
 	matlab += "];\n";
 	matlab += "[m, n] = size(x);\n";
-	matlab += "if (n % 2) == 0\n";
-	matlab += "m = n + 1\n";
-	matlab += "f = sgolayfilt(x, 3, m);\n";
-	matlab += "subplot(2, 1, 1)\n";
+	matlab += "if mod(n, 2) == 0\n";
+	matlab += "m = n - 1;\n";
+	matlab += "else;\n";
+	matlab += "m = n;\n";
+	matlab += "end\n";
+	matlab += "f = sgolayfilt(x, 9, m);\n";
+	matlab += "x1 = x - f;\n";
+	matlab += "subplot(3, 1, 1)\n";
 	matlab += "plot(1:n, x)\n";
-	matlab += "axis([0 100 0 120])\n";
+	matlab += "axis([0 n 0 120])\n";
 	matlab += "grid\n";
-	matlab += "subplot(2, 1, 2)\n";
+	matlab += "subplot(3, 1, 2)\n";
 	matlab += "plot(1:n, f)\n";
-	matlab += "axis([0 100 0 120])\n";
+	matlab += "axis([0 n 0 120])\n";
+	matlab += "grid\n";
+	matlab += "subplot(3, 1, 3)\n";
+	matlab += "plot(1:n, x1)\n";
+	matlab += "axis([0 n 0 120])\n";
 	matlab += "grid";
 
 	fprintf(file, "%s", matlab.c_str());
 
 	fclose(file);
+
+	QMessageBox::information(this,
+						 "Exportacion finalizada",
+						 "Datos exportados a MATLAB",
+						 QMessageBox::NoButton);
 }
