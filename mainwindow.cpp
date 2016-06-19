@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
-	ui->leFile->setText("C:\\datos01_01.dat");
+	ui->leFile->setText(QDir::homePath() + "/datos01_01.dat");
 
 	capture = false;
 	capturer = NULL;
@@ -134,7 +134,7 @@ void MainWindow::capture_data()
 	qDebug() << "Manufacturer: " << info.manufacturer(); //if showing manufacturer, means Qstring &name is good
 	qDebug() << "Busy		 : " << info.isBusy() << endl;
 
-	QSerialPort serial("COM6");
+	QSerialPort serial("/dev/ttyACM0");
 	serial.open(QSerialPort::ReadWrite);
 	serial.setBaudRate(QSerialPort::Baud9600);
 	serial.setDataBits(QSerialPort::Data8);
@@ -204,7 +204,11 @@ void MainWindow::on_btnFile_clicked()
 {
 	QString fileString;
 
-	fileString = QFileDialog::getOpenFileName(this, "Selecciona un archivo...", QDir::rootPath(), tr("Data (*.dat)"));
+	fileString = QFileDialog::getOpenFileName(
+				this,
+				"Selecciona un archivo...",
+				QDir::homePath(),
+				tr("Data (*.dat);;Todos los archivos (*.*)"));
 
 	ui->leFile->setText(fileString);
 }
