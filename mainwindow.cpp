@@ -56,7 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	dataIndex = 0;
 
 	ui->customPlot->setInteraction(QCP::iRangeDrag, true);
-	ui->customPlot->axisRect()->setRangeDrag(Qt::Vertical);
+	ui->customPlot->setInteraction(QCP::iRangeZoom, true);
 
 	ui->customPlot->addGraph();
 	ui->customPlot->addGraph();
