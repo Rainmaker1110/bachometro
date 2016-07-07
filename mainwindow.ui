@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="btnCapturar">
     <property name="geometry">
      <rect>
-      <x>490</x>
+      <x>650</x>
       <y>10</y>
       <width>71</width>
       <height>23</height>
@@ -115,7 +115,7 @@
    <widget class="QPushButton" name="btnPlot">
     <property name="geometry">
      <rect>
-      <x>380</x>
+      <x>470</x>
       <y>40</y>
       <width>71</width>
       <height>23</height>
@@ -128,7 +128,7 @@
    <widget class="QPushButton" name="btnPothole">
     <property name="geometry">
      <rect>
-      <x>490</x>
+      <x>650</x>
       <y>40</y>
       <width>71</width>
       <height>23</height>
@@ -141,14 +141,27 @@
    <widget class="QPushButton" name="btnExport">
     <property name="geometry">
      <rect>
-      <x>290</x>
+      <x>380</x>
       <y>40</y>
-      <width>75</width>
+      <width>71</width>
       <height>23</height>
      </rect>
     </property>
     <property name="text">
      <string>Exportar</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chbxFilter">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>10</y>
+      <width>85</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Filtrar</string>
     </property>
    </widget>
   </widget>
@@ -158,7 +171,7 @@
      <x>0</x>
      <y>0</y>
      <width>747</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
   </widget>

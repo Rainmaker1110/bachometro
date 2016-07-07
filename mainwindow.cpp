@@ -55,6 +55,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	dataIndex = 0;
 
+	ui->customPlot->setInteraction(QCP::iRangeDrag, true);
+	ui->customPlot->axisRect()->setRangeDrag(Qt::Vertical);
+
 	ui->customPlot->addGraph();
 	ui->customPlot->addGraph();
 	ui->customPlot->graph(1)->setPen(QPen(Qt::red));
@@ -65,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	// set axes ranges, so we see all data:
 	ui->customPlot->xAxis->setRange(0, 400);
-	ui->customPlot->yAxis->setRange(30, 120);
+	ui->customPlot->yAxis->setRange(0, 120);
 	ui->customPlot->replot();
 }
 
@@ -182,7 +185,7 @@ void MainWindow::capture_data()
 			yPothole.append(sensor[dataIndex].value);
 		}
 
-		qDebug() << xData[dataIndex] << " " << yData[dataIndex] << endl;
+		qDebug() << xData[dataIndex] << " " << yData[dataIndex];
 
 		//qDebug() << sensor[dataIndex].pothole << sensor[dataIndex].value << endl;
 
@@ -191,6 +194,8 @@ void MainWindow::capture_data()
 		ui->lblCmNum->setText(QString::number(data));
 		//data &= 255;
 	}
+
+	qDebug() << endl;
 }
 
 void MainWindow::plotGraph()
@@ -243,7 +248,7 @@ void MainWindow::on_btnPlot_clicked()
 
 	for (int i = 0; i < lectures; i++)
 	{
-		qDebug() << data[i].pothole << " - " << data[i].value << endl;
+		qDebug() << data[i].pothole << " - " << data[i].value;
 		x[i] = i; // x goes from -1 to 1
 		y[i] = data[i].value; // let's plot a quadratic function
 
@@ -254,12 +259,19 @@ void MainWindow::on_btnPlot_clicked()
 		}
 	}
 
+	qDebug() << endl;
+
+	if (ui->chbxFilter->isChecked())
+	{
+		savgol(y);
+	}
+
 	// create graph and assign data to it:
 	ui->customPlot->graph(0)->setData(x, y);
 	ui->customPlot->graph(1)->setData(xPothole, yPothole);
 	// set axes ranges, so we see all data:
 	ui->customPlot->xAxis->setRange(0, lectures);
-	ui->customPlot->yAxis->setRange(30, 120);
+	ui->customPlot->yAxis->setRange(0, 120);
 	ui->customPlot->replot();
 }
 
@@ -349,4 +361,62 @@ void MainWindow::on_btnExport_clicked()
 						 "Exportacion finalizada",
 						 "Datos exportados a MATLAB",
 						 QMessageBox::NoButton);
+}
+
+void MainWindow::savgol(QVector<double>& data)
+{
+	int size;
+
+	double sum;
+
+	size = data.size();
+
+	sum = 0;
+
+	// 2/3
+	// -3 12 17 12 - 3 35
+	// -2 3 6 7 6 3 -2 12
+	// -21 14 39 54 59 54 39 14 -21 231
+
+	// 4/5
+	// 5 -30 75 131 75 -30 5 231
+	// 15 -55 30 135 179 135 30 -55 15 429
+
+	for (int i = 0; i < size; i++)
+	{
+		sum += i - 2 < 0 ? 0.0 : -3.0 * data[i - 2];
+		sum += i - 1 < 0 ? 0.0 : 12 * data[i - 1];
+
+		sum += 17.0 * data[i];
+
+		sum += i + 1 >= size ? 0.0 : 12.0 * data[i + 1];
+		sum += i + 2 >= size ? 0.0 : -3.0 * data[i + 2];
+
+		data[i] -= sum / 35.0;
+
+		qDebug() << data[i];
+
+		sum = 0;
+	}
+/*
+	for (int i = 0; i < size; i++)
+	{
+		sum += i - 3 < 0 ? 0.0 : 5.0 * data[i - 3];
+		sum += i - 2 < 0 ? 0.0 : -30.0 * data[i - 2];
+		sum += i - 1 < 0 ? 0.0 : 75 * data[i - 1];
+
+		sum += 131.0 * data[i];
+
+		sum += i + 1 >= size ? 0.0 : 75.0 * data[i + 1];
+		sum += i + 2 >= size ? 0.0 : -30.0 * data[i + 2];
+		sum += i + 3 >= size ? 0.0 : 5.0 * data[i + 3];
+
+		data[i] -= sum / 231.0;
+
+		qDebug() << data[i];
+
+		sum = 0;
+	}
+*/
+	qDebug() << endl;
 }
