@@ -15,6 +15,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "sgsmooth.h"
+
 using namespace std;
 
 const int MAX_READ = 1000;
@@ -31,8 +33,8 @@ QTimer * timer;
 
 typedef struct sensor_data
 {
-	int value;
-	bool pothole;
+		int value;
+		bool pothole;
 } sensor_data;
 
 bool capture;
@@ -70,6 +72,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->customPlot->xAxis->setRange(0, 400);
 	ui->customPlot->yAxis->setRange(0, 120);
 	ui->customPlot->replot();
+
+	ui->customPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+	ui->customPlot->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
 }
 
 MainWindow::~MainWindow()
@@ -263,7 +268,23 @@ void MainWindow::on_btnPlot_clicked()
 
 	if (ui->chbxFilter->isChecked())
 	{
-		savgol(y);
+		//savgol(y);
+
+		double * ysmooth = new double[y.size()];
+
+		for (int i = 0; i < y.size(); i++)
+		{
+			ysmooth[i] = y.at(i);
+		}
+
+		calc_sgsmooth(y.size(), ysmooth, 5, 3);
+
+		for (int i = 0; i < y.size(); i++)
+		{
+			y[i] -= ysmooth[i];
+		}
+
+		delete ysmooth;
 	}
 
 	// create graph and assign data to it:
@@ -358,9 +379,9 @@ void MainWindow::on_btnExport_clicked()
 	fclose(file);
 
 	QMessageBox::information(this,
-						 "Exportacion finalizada",
-						 "Datos exportados a MATLAB",
-						 QMessageBox::NoButton);
+							 "Exportacion finalizada",
+							 "Datos exportados a MATLAB",
+							 QMessageBox::NoButton);
 }
 
 void MainWindow::savgol(QVector<double>& data)
@@ -398,7 +419,7 @@ void MainWindow::savgol(QVector<double>& data)
 
 		sum = 0;
 	}
-/*
+	/*
 	for (int i = 0; i < size; i++)
 	{
 		sum += i - 3 < 0 ? 0.0 : 5.0 * data[i - 3];
