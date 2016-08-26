@@ -57,6 +57,25 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	dataIndex = 0;
 
+	ui->cmbxWindow->addItem("1");
+	ui->cmbxWindow->addItem("2");
+	ui->cmbxWindow->addItem("3");
+	ui->cmbxWindow->addItem("4");
+	ui->cmbxWindow->addItem("5");
+	ui->cmbxWindow->addItem("6");
+	ui->cmbxWindow->addItem("7");
+	ui->cmbxWindow->addItem("8");
+	ui->cmbxWindow->addItem("9");
+
+	ui->cmbxGrade->addItem("1");
+	ui->cmbxGrade->addItem("2");
+	ui->cmbxGrade->addItem("3");
+	ui->cmbxGrade->addItem("4");
+	ui->cmbxGrade->addItem("5");
+	ui->cmbxGrade->addItem("6");
+	ui->cmbxGrade->addItem("7");
+	ui->cmbxGrade->addItem("8");
+
 	ui->customPlot->setInteraction(QCP::iRangeDrag, true);
 	ui->customPlot->setInteraction(QCP::iRangeZoom, true);
 
@@ -277,12 +296,15 @@ void MainWindow::on_btnPlot_clicked()
 			ysmooth[i] = y.at(i);
 		}
 
-		calc_sgsmooth(y.size(), ysmooth, 5, 3);
+		calc_sgsmooth(y.size(), ysmooth, ui->cmbxWindow->currentText().toInt(), ui->cmbxGrade->currentText().toInt());
 
 		for (int i = 0; i < y.size(); i++)
 		{
 			y[i] -= ysmooth[i];
+			qDebug() << y[i];
 		}
+
+		qDebug() << endl;
 
 		delete ysmooth;
 	}

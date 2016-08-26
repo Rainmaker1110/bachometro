@@ -16,11 +16,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     qcustomplot.cpp \
-    sgsmooth.cpp
+    sgsmooth.cpp \
+    arduinoreader.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
-    sgsmooth.h
+    sgsmooth.h \
+    arduinoreader.h
 
 FORMS    += mainwindow.ui
 
