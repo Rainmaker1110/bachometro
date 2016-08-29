@@ -2,12 +2,10 @@
 
 #include <thread>
 
-#include <QTimer>
-
-#include <QDebug>
 #include <QDateTime>
-
+#include <QDebug>
 #include <QFileDialog>
+#include <QTimer>
 
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
@@ -50,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+
 	ui->leFile->setText(QDir::homePath() + "/datos01_01.dat");
 
 	capture = false;
@@ -76,24 +75,32 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->cmbxGrade->addItem("7");
 	ui->cmbxGrade->addItem("8");
 
-	ui->customPlot->setInteraction(QCP::iRangeDrag, true);
-	ui->customPlot->setInteraction(QCP::iRangeZoom, true);
+	for (QSerialPortInfo &serialPortInfo : QSerialPortInfo::availablePorts())
+	{
+		ui->cmbxSerialPorts->addItem(serialPortInfo.portName());
+	}
 
 	ui->customPlot->addGraph();
 	ui->customPlot->addGraph();
 	ui->customPlot->graph(1)->setPen(QPen(Qt::red));
 
 	// give the axes some labels:
-	ui->customPlot->xAxis->setLabel("Medicion");
-	ui->customPlot->yAxis->setLabel("Valor");
+	ui->customPlot->xAxis->setLabel("Sample");
+	ui->customPlot->yAxis->setLabel("Value");
 
 	// set axes ranges, so we see all data:
 	ui->customPlot->xAxis->setRange(0, 400);
 	ui->customPlot->yAxis->setRange(0, 120);
 	ui->customPlot->replot();
 
+	// Set style
 	ui->customPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
 	ui->customPlot->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+
+	// Set user interaction
+	ui->customPlot->setInteraction(QCP::iRangeDrag, true);
+	ui->customPlot->setInteraction(QCP::iRangeZoom, true);
+
 }
 
 MainWindow::~MainWindow()

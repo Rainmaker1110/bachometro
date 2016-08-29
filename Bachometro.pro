@@ -17,12 +17,12 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     qcustomplot.cpp \
     sgsmooth.cpp \
-    arduinoreader.cpp
+    sampler.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
     sgsmooth.h \
-    arduinoreader.h
+    sampler.h
 
 FORMS    += mainwindow.ui
 
