@@ -15,7 +15,15 @@
 
 #include "sgsmooth.h"
 
+#define SAMPLES_MAX_READ 100
+
 using namespace std;
+
+typedef struct sample_info
+{
+	char sensor_id;
+	unsigned char values[SAMPLES_MAX_READ];
+} sample_info;
 
 const int MAX_READ = 1000;
 
@@ -31,8 +39,8 @@ QTimer * timer;
 
 typedef struct sensor_data
 {
-		int value;
-		bool pothole;
+	int value;
+	bool pothole;
 } sensor_data;
 
 bool capture;
@@ -100,7 +108,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	// Set user interaction
 	ui->customPlot->setInteraction(QCP::iRangeDrag, true);
 	ui->customPlot->setInteraction(QCP::iRangeZoom, true);
-
 }
 
 MainWindow::~MainWindow()
@@ -161,14 +168,20 @@ void MainWindow::on_btnCapturar_clicked()
 
 void MainWindow::capture_data()
 {
-	unsigned int data;
+	//unsigned int data;
 
-	QSerialPortInfo info("COM6");
+	sample_info sensorA;
+
+	string serialPortName = ui->cmbxSerialPorts->currentText().toStdString();
+
+	QSerialPortInfo info(serialPortName.c_str());
+
 	qDebug() << "Name		 : " << info.portName();
 	qDebug() << "Manufacturer: " << info.manufacturer(); //if showing manufacturer, means Qstring &name is good
 	qDebug() << "Busy		 : " << info.isBusy() << endl;
 
-	QSerialPort serial("/dev/ttyACM0");
+	QSerialPort serial(serialPortName.c_str());
+
 	serial.open(QSerialPort::ReadWrite);
 	serial.setBaudRate(QSerialPort::Baud9600);
 	serial.setDataBits(QSerialPort::Data8);
@@ -186,20 +199,36 @@ void MainWindow::capture_data()
 	qDebug() << "Is open : " << serial.isOpen() << endl;
 	qDebug() << "Is readable : " << serial.isReadable() << endl;
 
-	data = 0;
+	xData.fill(0, 0);
+	yData.fill(0, 0);
 
-	xPothole.fill(0, 0);
-	yPothole.fill(0, 0);
-
+	dataIndex = 0;
 	while (serial.waitForReadyRead(5000) && capture)
 	{
-		serial.read((char *) &data, sizeof(unsigned int));
+		qDebug() << serial.read((char *) &sensorA, sizeof(sample_info)) << endl;
 
-		sensor[dataIndex].value = data & 0xFF; // 0xFFFF
-		sensor[dataIndex].pothole = pothole;
+		qDebug() << sensorA.sensor_id << endl;
+
+		for (char c : sensorA.values)
+		{
+			qDebug() << (int) c << endl;
+		}
+
+		for (int i = 1; i <= 100; i++)
+		{
+			xData.append(i + dataIndex);
+		}
+
+		for (char v : sensorA.values)
+		{
+			yData.append((double) v);
+		}
+
+		// sensor[dataIndex].value = data & 0xFF; // 0xFFFF
+		// sensor[dataIndex].pothole = pothole;
 
 
-		if (dataIndex < MAX_READ)
+		/*if (dataIndex < MAX_READ)
 		{
 			xData[dataIndex] = dataIndex;
 			yData[dataIndex] = sensor[dataIndex].value;
@@ -214,19 +243,19 @@ void MainWindow::capture_data()
 		{
 			xPothole.append(dataIndex);
 			yPothole.append(sensor[dataIndex].value);
-		}
+		}*/
 
-		qDebug() << xData[dataIndex] << " " << yData[dataIndex];
+		//qDebug() << xData[dataIndex] << " " << yData[dataIndex];
 
 		//qDebug() << sensor[dataIndex].pothole << sensor[dataIndex].value << endl;
 
-		dataIndex++;
+		dataIndex+= 100;
 
-		ui->lblCmNum->setText(QString::number(data));
+		//ui->lblCmNum->setText(QString::number(data));
 		//data &= 255;
 	}
 
-	qDebug() << endl;
+	//qDebug() << endl;
 }
 
 void MainWindow::plotGraph()

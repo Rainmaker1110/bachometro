@@ -14,7 +14,7 @@ static const int SAMPLES_MAX_READ = 100;
 typedef struct sample_info
 {
 		char sensor_id;
-		int values[SAMPLES_MAX_READ];
+		unsigned char values[SAMPLES_MAX_READ];
 } sample_info;
 
 class Sampler
