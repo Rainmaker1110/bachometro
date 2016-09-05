@@ -21,8 +21,8 @@ using namespace std;
 
 typedef struct sample_info
 {
-	char sensor_id;
-	unsigned char values[SAMPLES_MAX_READ];
+		char sensor_id;
+		unsigned char values[SAMPLES_MAX_READ];
 } sample_info;
 
 const int MAX_READ = 1000;
@@ -39,8 +39,8 @@ QTimer * timer;
 
 typedef struct sensor_data
 {
-	int value;
-	bool pothole;
+		int value;
+		bool pothole;
 } sensor_data;
 
 bool capture;
@@ -183,7 +183,7 @@ void MainWindow::capture_data()
 	QSerialPort serial(serialPortName.c_str());
 
 	serial.open(QSerialPort::ReadWrite);
-	serial.setBaudRate(QSerialPort::Baud9600);
+	serial.setBaudRate(QSerialPort::Baud115200);
 	serial.setDataBits(QSerialPort::Data8);
 	serial.setParity(QSerialPort::NoParity);
 	serial.setStopBits(QSerialPort::OneStop);
@@ -203,32 +203,41 @@ void MainWindow::capture_data()
 	yData.fill(0, 0);
 
 	dataIndex = 0;
-	while (serial.waitForReadyRead(5000) && capture)
+
+	int data_read;
+
+	int i = 0;
+	serial.write("Y");
+	while (serial.waitForReadyRead(2500) && capture)
 	{
-		qDebug() << serial.read((char *) &sensorA, sizeof(sample_info)) << endl;
+		if (serial.bytesAvailable() >= SAMPLES_MAX_READ)
+		{
+			data_read = serial.read((char *) &sensorA, sizeof(sample_info));
 
-		qDebug() << sensorA.sensor_id << endl;
+			qDebug() << data_read << endl;
 
-		for (char c : sensorA.values)
+			qDebug() << sensorA.sensor_id << endl;
+
+			/*for (char c : sensorA.values)
 		{
 			qDebug() << (int) c << endl;
-		}
+		}*/
 
-		for (int i = 1; i <= 100; i++)
-		{
-			xData.append(i + dataIndex);
-		}
+			for (int j = 0; j < data_read; j++)
+			{
+				xData.append(i++);
+			}
 
-		for (char v : sensorA.values)
-		{
-			yData.append((double) v);
-		}
+			for (char v : sensorA.values)
+			{
+				yData.append((double) v);
+			}
 
-		// sensor[dataIndex].value = data & 0xFF; // 0xFFFF
-		// sensor[dataIndex].pothole = pothole;
+			// sensor[dataIndex].value = data & 0xFF; // 0xFFFF
+			// sensor[dataIndex].pothole = pothole;
 
 
-		/*if (dataIndex < MAX_READ)
+			/*if (dataIndex < MAX_READ)
 		{
 			xData[dataIndex] = dataIndex;
 			yData[dataIndex] = sensor[dataIndex].value;
@@ -245,14 +254,16 @@ void MainWindow::capture_data()
 			yPothole.append(sensor[dataIndex].value);
 		}*/
 
-		//qDebug() << xData[dataIndex] << " " << yData[dataIndex];
+			//qDebug() << xData[dataIndex] << " " << yData[dataIndex];
 
-		//qDebug() << sensor[dataIndex].pothole << sensor[dataIndex].value << endl;
+			//qDebug() << sensor[dataIndex].pothole << sensor[dataIndex].value << endl;
 
-		dataIndex+= 100;
+			//dataIndex++;
 
-		//ui->lblCmNum->setText(QString::number(data));
-		//data &= 255;
+			//ui->lblCmNum->setText(QString::number(data));
+			//data &= 255;
+		}
+		serial.write("Y");
 	}
 
 	//qDebug() << endl;

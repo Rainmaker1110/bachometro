@@ -31,8 +31,6 @@ class Sampler
 
 		thread * samplingThread;
 
-		void read();
-
 		void writeFile();
 
 	public:
@@ -43,6 +41,8 @@ class Sampler
 
 		string getSamplingFileName();
 		void setSamplingFileName(string samplingFileName);
+
+		void open();
 
 		void start();
 		void stop();

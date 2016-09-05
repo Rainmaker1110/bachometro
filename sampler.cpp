@@ -36,12 +36,12 @@ void Sampler::setSamplingFileName(string samplingFileName)
 	this->samplingFileName = samplingFileName;
 }
 
-void Sampler::read()
+void Sampler::open()
 {
 	QSerialPort serialPort(serialPortName.c_str());
 
 	serialPort.open(QSerialPort::ReadWrite);
-	serialPort.setBaudRate(QSerialPort::Baud9600);
+	serialPort.setBaudRate(QSerialPort::Bau115200);
 	serialPort.setDataBits(QSerialPort::Data8);
 	serialPort.setParity(QSerialPort::NoParity);
 	serialPort.setStopBits(QSerialPort::OneStop);
@@ -52,7 +52,7 @@ void Sampler::read()
 		return;
 	}
 
-	while (serialPort.waitForReadyRead(5000) && reading)
+	while (serialPort.waitForReadyRead(SERIAL_TIMEOUT) && reading)
 	{
 		serialPort.read((char *) &samples, sizeof(sample_info));
 	}
