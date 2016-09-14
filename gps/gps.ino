@@ -2,7 +2,7 @@
 #include <TinyGPS.h>
 
 TinyGPS gps;
-LiquidCrystal lcd(8, 9, 4, 5, 6, 7);              //LCD driver pins
+LiquidCrystal lcd(12, 11, 10, 9, 8, 7);              //LCD driver pins
 int led = 13;
 
 long lat, lon;

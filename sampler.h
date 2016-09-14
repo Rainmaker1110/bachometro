@@ -31,6 +31,8 @@ class Sampler
 
 		thread * samplingThread;
 
+		void read();
+
 		void writeFile();
 
 	public:

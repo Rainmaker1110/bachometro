@@ -16,13 +16,11 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     qcustomplot.cpp \
-    sgsmooth.cpp \
-    sampler.cpp
+    sgsmooth.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
-    sgsmooth.h \
-    sampler.h
+    sgsmooth.h
 
 FORMS    += mainwindow.ui
 

@@ -152,7 +152,7 @@ void MainWindow::on_btnCapturar_clicked()
 
 		file = fopen(ui->leFile->text().toStdString().c_str(), "wb");
 
-		fwrite(sensor, sizeof(sensor_data), dataIndex, file);
+		//fwrite(xData, sizeof(sensor_data), dataIndex, file);
 
 		dataIndex = 0;
 

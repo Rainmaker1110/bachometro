@@ -1,9 +1,11 @@
-#include <string.h>
+#include <cstring>
 
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 
 #include "sampler.h"
+
+using namespace std;
 
 const int Sampler::SERIAL_TIMEOUT = 5000;
 
@@ -41,7 +43,7 @@ void Sampler::open()
 	QSerialPort serialPort(serialPortName.c_str());
 
 	serialPort.open(QSerialPort::ReadWrite);
-	serialPort.setBaudRate(QSerialPort::Bau115200);
+	serialPort.setBaudRate(QSerialPort::Baud115200);
 	serialPort.setDataBits(QSerialPort::Data8);
 	serialPort.setParity(QSerialPort::NoParity);
 	serialPort.setStopBits(QSerialPort::OneStop);
@@ -50,11 +52,6 @@ void Sampler::open()
 	if (!(serialPort.isOpen() && serialPort.isReadable()))
 	{
 		return;
-	}
-
-	while (serialPort.waitForReadyRead(SERIAL_TIMEOUT) && reading)
-	{
-		serialPort.read((char *) &samples, sizeof(sample_info));
 	}
 }
 
@@ -72,11 +69,24 @@ void Sampler::stop()
 {
 	if (samplingThread != NULL)
 	{
-		reading = false;
+		reading = false;,
 
 		samplingThread->join();
 
 		delete samplingThread;
 		samplingThread = NULL;
 	}
+}
+
+void Sampler::read()
+{
+	while (serialPort.waitForReadyRead(SERIAL_TIMEOUT) && reading)
+	{
+		serialPort.read((char *) &samples, sizeof(sample_info));
+	}
+}
+
+void Sampler::writeFile()
+{
+
 }

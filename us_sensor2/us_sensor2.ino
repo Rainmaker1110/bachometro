@@ -1,7 +1,7 @@
 #include <LiquidCrystal.h>
 
-#define echoPin 7 // Echo Pin
-#define trigPin 8 // Trigger Pin
+#define echoPin 5 // Echo Pin
+#define trigPin 6 // Trigger Pin
 #define LEDPin 13 // Onboard LED
 
 #define SAMPLES_MAX_READ 100
@@ -10,7 +10,7 @@ typedef struct sample_info
 {
   char sensor_id;
   byte values[SAMPLES_MAX_READ];
-} 
+}
 sample_info;
 
 int minimumRange = 1; // Minimum range needed
@@ -24,7 +24,7 @@ long distance;
 
 sample_info sensorA;
 
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+LiquidCrystal lcd(12, 11, 10, 9, 8, 7);
 
 void setup() {
   Serial.begin (115200);
@@ -78,7 +78,7 @@ void loop()
       if (pc_ready)
       {
         Serial.write((const byte *) &sensorA, sizeof(sample_info));
-        
+
         pc_ready = 0;
       }
       index = 0;
