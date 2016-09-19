@@ -25,29 +25,16 @@ typedef struct sample_info
 		unsigned char values[SAMPLES_MAX_READ];
 } sample_info;
 
-const int MAX_READ = 1000;
+QVector<double> xData(100000);
 
-bool pothole;
-
-QVector<double> xData(MAX_READ, 0);
-QVector<double> yData(MAX_READ, 0);
-
-QVector<double> xPothole(0);
-QVector<double> yPothole(0);
+QVector<double> yData1(0, 0);
+QVector<double> yData2(0, 0);
+QVector<double> yData3(0, 0);
 
 QTimer * timer;
 
-typedef struct sensor_data
-{
-		int value;
-		bool pothole;
-} sensor_data;
-
 bool capture;
 thread * capturer;
-
-int dataIndex;
-sensor_data sensor[MAX_READ];
 
 FILE * file;
 
@@ -57,53 +44,47 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 
-	ui->leFile->setText(QDir::homePath() + "/datos01_01.dat");
-
+	// Set thread and stop condition
 	capture = false;
 	capturer = NULL;
 
-	dataIndex = 0;
+	// Fill x axis with increasing numbers (C++11)
+	iota(xData.begin(), xData.end(), 0);
 
-	ui->cmbxWindow->addItem("1");
-	ui->cmbxWindow->addItem("2");
-	ui->cmbxWindow->addItem("3");
-	ui->cmbxWindow->addItem("4");
-	ui->cmbxWindow->addItem("5");
-	ui->cmbxWindow->addItem("6");
-	ui->cmbxWindow->addItem("7");
-	ui->cmbxWindow->addItem("8");
-	ui->cmbxWindow->addItem("9");
+	// File path
+	ui->leFile->setText(QDir::homePath() + "/datos01_01.dat");
 
-	ui->cmbxGrade->addItem("1");
-	ui->cmbxGrade->addItem("2");
-	ui->cmbxGrade->addItem("3");
-	ui->cmbxGrade->addItem("4");
-	ui->cmbxGrade->addItem("5");
-	ui->cmbxGrade->addItem("6");
-	ui->cmbxGrade->addItem("7");
-	ui->cmbxGrade->addItem("8");
+	// Set values for Savitzky-Golay Filter
+	ui->cmbxWindow->addItems({"1", "2", "3", "4", "5", "6", "7", "8", "9"});
+	ui->cmbxGrade->addItems({"1", "2", "3", "4", "5", "6", "7", "8"});
 
+	// List available serial ports
 	for (QSerialPortInfo &serialPortInfo : QSerialPortInfo::availablePorts())
 	{
 		ui->cmbxSerialPorts->addItem(serialPortInfo.portName());
 	}
 
+	// Set graphs for QCustomPlot
 	ui->customPlot->addGraph();
 	ui->customPlot->addGraph();
+	ui->customPlot->addGraph();
+
 	ui->customPlot->graph(1)->setPen(QPen(Qt::red));
+	ui->customPlot->graph(2)->setPen(QPen(Qt::green));
 
 	// give the axes some labels:
-	ui->customPlot->xAxis->setLabel("Sample");
-	ui->customPlot->yAxis->setLabel("Value");
+	ui->customPlot->xAxis->setLabel("Time");
+	ui->customPlot->yAxis->setLabel("Distance");
 
 	// set axes ranges, so we see all data:
-	ui->customPlot->xAxis->setRange(0, 400);
+	ui->customPlot->xAxis->setRange(0, 300);
 	ui->customPlot->yAxis->setRange(0, 120);
 	ui->customPlot->replot();
 
 	// Set style
 	ui->customPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
 	ui->customPlot->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+	ui->customPlot->graph(2)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
 
 	// Set user interaction
 	ui->customPlot->setInteraction(QCP::iRangeDrag, true);
@@ -119,8 +100,7 @@ void MainWindow::on_btnCapturar_clicked()
 {
 	if (capturer == NULL)
 	{
-		pothole = false;
-		ui->customPlot->xAxis->setRange(0, 400);
+		ui->customPlot->xAxis->setRange(0, 300);
 
 		capture = true;
 		capturer = new std::thread(&MainWindow::capture_data, this);
@@ -143,23 +123,24 @@ void MainWindow::on_btnCapturar_clicked()
 		capturer = NULL;
 		ui->lblCmNum->setText("0");
 
-		ui->customPlot->graph(0)->setData(xData, yData);
+		ui->customPlot->graph(0)->setData(xData, yData1);
+		ui->customPlot->graph(1)->setData(xData, yData2);
+		ui->customPlot->graph(2)->setData(xData, yData3);
 
 		ui->customPlot->replot();
 
 		timer->stop();
 		delete timer;
 
-		file = fopen(ui->leFile->text().toStdString().c_str(), "wb");
+		//file = fopen(ui->leFile->text().toStdString().c_str(), "wb");
 
 		//fwrite(xData, sizeof(sensor_data), dataIndex, file);
 
-		dataIndex = 0;
+		//fclose(file);
 
-		fclose(file);
-
-		xData.fill(0);
-		yData.fill(0);
+		yData1.fill(0, 0);
+		yData2.fill(0, 0);
+		yData3.fill(0, 0);
 
 		ui->btnCapturar->setText("Capturar");
 		ui->btnPothole->setEnabled(false);
@@ -168,9 +149,7 @@ void MainWindow::on_btnCapturar_clicked()
 
 void MainWindow::capture_data()
 {
-	//unsigned int data;
-
-	sample_info sensorA;
+	sample_info sensor;
 
 	string serialPortName = ui->cmbxSerialPorts->currentText().toStdString();
 
@@ -199,10 +178,9 @@ void MainWindow::capture_data()
 	qDebug() << "Is open : " << serial.isOpen() << endl;
 	qDebug() << "Is readable : " << serial.isReadable() << endl;
 
-	xData.fill(0, 0);
-	yData.fill(0, 0);
-
-	dataIndex = 0;
+	yData1.fill(0, 100);
+	yData2.fill(0, 100);
+	yData3.fill(0, 100);
 
 	int data_read;
 
@@ -212,11 +190,11 @@ void MainWindow::capture_data()
 	{
 		if (serial.bytesAvailable() >= SAMPLES_MAX_READ)
 		{
-			data_read = serial.read((char *) &sensorA, sizeof(sample_info));
+			data_read = serial.read((char *) &sensor, sizeof(sample_info));
 
 			qDebug() << data_read << endl;
 
-			qDebug() << sensorA.sensor_id << endl;
+			qDebug() << sensor.sensor_id << endl;
 
 			/*for (char c : sensorA.values)
 		{
@@ -228,9 +206,20 @@ void MainWindow::capture_data()
 				xData.append(i++);
 			}
 
-			for (char v : sensorA.values)
+			for (char v : sensor.values)
 			{
-				yData.append((double) v);
+				if (sensor.sensor_id == 'A')
+				{
+					yData1.append((double) v);
+				}
+				else if (sensor.sensor_id == 'B')
+				{
+					yData2.append((double) v);
+				}
+				else
+				{
+					yData3.append((double) v);
+				}
 			}
 
 			// sensor[dataIndex].value = data & 0xFF; // 0xFFFF
@@ -271,8 +260,9 @@ void MainWindow::capture_data()
 
 void MainWindow::plotGraph()
 {
-	ui->customPlot->graph(0)->setData(xData, yData);
-	ui->customPlot->graph(1)->setData(xPothole, yPothole);
+	ui->customPlot->graph(0)->setData(xData, yData1);
+	ui->customPlot->graph(1)->setData(xData, yData2);
+	ui->customPlot->graph(2)->setData(xData, yData3);
 	ui->customPlot->replot();
 }
 
@@ -291,13 +281,11 @@ void MainWindow::on_btnFile_clicked()
 
 void MainWindow::on_btnPlot_clicked()
 {
+	/*
 	FILE * file;
-
-	sensor_data * data;
 
 	long long int fsize;
 	int lectures;
-
 	file = fopen(ui->leFile->text().toStdString().c_str(), "rb");
 
 	fseek(file, 0, SEEK_END);
@@ -363,24 +351,17 @@ void MainWindow::on_btnPlot_clicked()
 	ui->customPlot->xAxis->setRange(0, lectures);
 	ui->customPlot->yAxis->setRange(0, 120);
 	ui->customPlot->replot();
+*/
 }
 
 void MainWindow::on_btnPothole_clicked()
 {
-	if (pothole)
-	{
-		ui->btnPothole->setText("Bache");
-	}
-	else
-	{
-		ui->btnPothole->setText("No bache");
-	}
 
-	pothole = !pothole;
 }
 
 void MainWindow::on_btnExport_clicked()
 {
+	/*
 	FILE * file;
 
 	string filename;
@@ -451,6 +432,7 @@ void MainWindow::on_btnExport_clicked()
 							 "Exportacion finalizada",
 							 "Datos exportados a MATLAB",
 							 QMessageBox::NoButton);
+							 */
 }
 
 void MainWindow::savgol(QVector<double>& data)
