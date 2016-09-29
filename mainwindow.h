@@ -34,6 +34,8 @@ private slots:
 
 	void savgol(QVector<double>& data);
 
+	void on_btnLngLat_clicked();
+
 private:
 	Ui::MainWindow *ui;
 };

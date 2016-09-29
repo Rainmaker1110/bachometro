@@ -1,4 +1,5 @@
 #include <LiquidCrystal.h>
+#include <Timer.h>
 
 /* --- DEFINES -- */
 #define trigPin 6 // Trigger Pin
@@ -36,6 +37,8 @@ long distance;
 sample_info sensor[3];
 
 LiquidCrystal lcd(12, 11, 10, 9, 8, 7);
+
+void changeSendState();
 
 void setup() {
   Serial.begin (115200);
@@ -83,6 +86,8 @@ void loop()
     lcd.setCursor(0, 0);
     lcd.clear();
     lcd.print(distance);
+    lcd.print(" ");
+    lcd.print(sensor[i].sensor_id);
 
     if (distance >= minimumRange && distance <= maximumRange)
     {
@@ -104,7 +109,7 @@ void loop()
     }
 
     //Delay 10ms before next reading.
-    //delay(10);
+    //delay(500);
   }
 }
 

@@ -93,9 +93,9 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>80</y>
+      <y>110</y>
       <width>861</width>
-      <height>561</height>
+      <height>531</height>
      </rect>
     </property>
    </widget>
@@ -125,24 +125,11 @@
      <string>Graficar</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="btnPothole">
-    <property name="geometry">
-     <rect>
-      <x>800</x>
-      <y>40</y>
-      <width>71</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Bache</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="btnExport">
     <property name="geometry">
      <rect>
-      <x>460</x>
-      <y>10</y>
+      <x>380</x>
+      <y>70</y>
       <width>71</width>
       <height>23</height>
      </rect>
@@ -167,7 +154,7 @@
    <widget class="QComboBox" name="cmbxWindow">
     <property name="geometry">
      <rect>
-      <x>550</x>
+      <x>470</x>
       <y>40</y>
       <width>69</width>
       <height>22</height>
@@ -177,7 +164,7 @@
    <widget class="QComboBox" name="cmbxGrade">
     <property name="geometry">
      <rect>
-      <x>630</x>
+      <x>550</x>
       <y>40</y>
       <width>69</width>
       <height>22</height>
@@ -187,7 +174,7 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>560</x>
+      <x>480</x>
       <y>10</y>
       <width>101</width>
       <height>16</height>
@@ -207,6 +194,39 @@
      </rect>
     </property>
    </widget>
+   <widget class="QLineEdit" name="lneLng">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>50</y>
+      <width>113</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lneLat">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>80</y>
+      <width>113</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnLngLat">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>80</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Enviar</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -214,7 +234,7 @@
      <x>0</x>
      <y>0</y>
      <width>900</width>
-     <height>19</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

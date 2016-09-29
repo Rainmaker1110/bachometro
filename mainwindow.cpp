@@ -10,6 +10,9 @@
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -21,8 +24,8 @@ using namespace std;
 
 typedef struct sample_info
 {
-		char sensor_id;
-		unsigned char values[SAMPLES_MAX_READ];
+	char sensor_id;
+	unsigned char values[SAMPLES_MAX_READ];
 } sample_info;
 
 QVector<double> xData(100000);
@@ -112,7 +115,6 @@ void MainWindow::on_btnCapturar_clicked()
 		timer->start(50);
 
 		ui->btnCapturar->setText("Detener");
-		ui->btnPothole->setEnabled(true);
 	}
 	else if (capturer != NULL)
 	{
@@ -143,7 +145,6 @@ void MainWindow::on_btnCapturar_clicked()
 		yData3.fill(0, 0);
 
 		ui->btnCapturar->setText("Capturar");
-		ui->btnPothole->setEnabled(false);
 	}
 }
 
@@ -178,34 +179,25 @@ void MainWindow::capture_data()
 	qDebug() << "Is open : " << serial.isOpen() << endl;
 	qDebug() << "Is readable : " << serial.isReadable() << endl;
 
-	yData1.fill(0, 100);
-	yData2.fill(0, 100);
-	yData3.fill(0, 100);
+	yData1.fill(0, 0);
+	yData2.fill(0, 0);
+	yData3.fill(0, 0);
 
 	int data_read;
 
-	int i = 0;
 	serial.write("Y");
-	while (serial.waitForReadyRead(2500) && capture)
+	while (serial.waitForReadyRead(20000) && capture)
 	{
 		if (serial.bytesAvailable() >= SAMPLES_MAX_READ)
 		{
 			data_read = serial.read((char *) &sensor, sizeof(sample_info));
 
-			qDebug() << data_read << endl;
-
-			qDebug() << sensor.sensor_id << endl;
+			qDebug() << sensor.sensor_id << " - " << data_read << endl;
 
 			/*for (char c : sensorA.values)
 		{
 			qDebug() << (int) c << endl;
 		}*/
-
-			for (int j = 0; j < data_read; j++)
-			{
-				xData.append(i++);
-			}
-
 			for (char v : sensor.values)
 			{
 				if (sensor.sensor_id == 'A')
@@ -214,6 +206,7 @@ void MainWindow::capture_data()
 				}
 				else if (sensor.sensor_id == 'B')
 				{
+
 					yData2.append((double) v);
 				}
 				else
@@ -252,8 +245,9 @@ void MainWindow::capture_data()
 			//ui->lblCmNum->setText(QString::number(data));
 			//data &= 255;
 		}
-		serial.write("Y");
 	}
+
+	serial.write("\0");
 
 	//qDebug() << endl;
 }
@@ -491,4 +485,19 @@ void MainWindow::savgol(QVector<double>& data)
 	}
 */
 	qDebug() << endl;
+}
+
+void MainWindow::on_btnLngLat_clicked()
+{
+	QNetworkAccessManager * nam;
+	nam = new QNetworkAccessManager(this);
+
+	QByteArray post_data;
+	post_data.append("lng=" + ui->lneLng->text() + "&lat=" + ui->lneLat->text());
+	QNetworkRequest request = QNetworkRequest(QUrl("http://rainmaker.server56.com/maps/add_pothole.php"));
+	// request
+	request.setRawHeader("Content-Type", "application/x-www-form-urlencoded");
+	nam->post(request,post_data);
+
+	delete nam;
 }
