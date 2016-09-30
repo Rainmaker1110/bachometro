@@ -12,6 +12,8 @@
 
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QUrl>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -348,11 +350,6 @@ void MainWindow::on_btnPlot_clicked()
 */
 }
 
-void MainWindow::on_btnPothole_clicked()
-{
-
-}
-
 void MainWindow::on_btnExport_clicked()
 {
 	/*
@@ -489,15 +486,31 @@ void MainWindow::savgol(QVector<double>& data)
 
 void MainWindow::on_btnLngLat_clicked()
 {
-	QNetworkAccessManager * nam;
-	nam = new QNetworkAccessManager(this);
+	QEventLoop eventLoop;
+	QNetworkAccessManager mgr;
 
-	QByteArray post_data;
-	post_data.append("lng=" + ui->lneLng->text() + "&lat=" + ui->lneLat->text());
-	QNetworkRequest request = QNetworkRequest(QUrl("http://rainmaker.server56.com/maps/add_pothole.php"));
-	// request
-	request.setRawHeader("Content-Type", "application/x-www-form-urlencoded");
-	nam->post(request,post_data);
+	QUrlQuery params;
+	params.addQueryItem("lng", ui->lneLng->text());
+	params.addQueryItem("lat", ui->lneLat->text());
+	params.addQueryItem("new_pothole", "Submit");
 
-	delete nam;
+	QObject::connect(&mgr, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
+
+	QNetworkRequest req(QUrl(QString("http://rainmaker.host56.com/maps/add_pothole.php")));
+	req.setRawHeader("Content-Type", "application/x-www-form-urlencoded");
+	mgr.post(req, params.query(QUrl::FullyEncoded).toUtf8());
+	QNetworkReply *reply = mgr.get(req);
+	eventLoop.exec(); // blocks stack until "finished()" has been called
+
+	if (reply->error() == QNetworkReply::NoError) {
+		//success
+		qDebug() << "Success" <<reply->readAll();
+		delete reply;
+	}
+	else
+	{
+		//failure
+		qDebug() << "Failure" <<reply->errorString();
+		delete reply;
+	}
 }

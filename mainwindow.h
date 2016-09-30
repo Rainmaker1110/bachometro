@@ -28,8 +28,6 @@ private slots:
 
 	void on_btnPlot_clicked();
 
-	void on_btnPothole_clicked();
-
 	void on_btnExport_clicked();
 
 	void savgol(QVector<double>& data);
