@@ -18,6 +18,7 @@ public:
 	~MainWindow();
 
 	void capture_data();
+	void send_localization(int lng, int lat);
 
 private slots:
 	void on_btnCapturar_clicked();

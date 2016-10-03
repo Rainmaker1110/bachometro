@@ -3,6 +3,11 @@
 
 TinyGPS gps;
 LiquidCrystal lcd(12, 11, 10, 9, 8, 7);              //LCD driver pins
+
+char computer;
+
+int c;
+
 int led = 13;
 
 long lat, lng;
@@ -47,6 +52,7 @@ void LON() {                       //Longitude state
 
 void setup()
 {
+  Serial.begin(115200);
   Serial1.begin(38400);            //Set the GPS baud rate.
 
   pinMode(led, OUTPUT);
@@ -62,7 +68,7 @@ void setup()
 
 void loop()
 {
-  int c;
+  computer = 0;
   
   while (Serial1.available())
   {
@@ -88,14 +94,12 @@ void loop()
 
   if (Serial.available())
   {
-    c = Serial.read();
+    computer = Serial.read();
 
-    if (c)
+    if (computer)
     {
-      Serial.write(lat);
-      Serial.write(lng);
+      Serial.write((byte*) &lng, sizeof(long));
+      Serial.write((byte*) &lat, sizeof(long));
     }
-
-    c = 0;
   }
 }

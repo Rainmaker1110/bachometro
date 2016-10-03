@@ -26,8 +26,8 @@ using namespace std;
 
 typedef struct sample_info
 {
-	char sensor_id;
-	unsigned char values[SAMPLES_MAX_READ];
+		char sensor_id;
+		unsigned char values[SAMPLES_MAX_READ];
 } sample_info;
 
 QVector<double> xData(100000);
@@ -486,19 +486,85 @@ void MainWindow::savgol(QVector<double>& data)
 
 void MainWindow::on_btnLngLat_clicked()
 {
+	int lng;
+	int lat;
+
+	lng = 0;
+	lat = 0;
+
+	string serialPortName = ui->cmbxSerialPorts->currentText().toStdString();
+
+	QSerialPortInfo info(serialPortName.c_str());
+
+	qDebug() << "Name		 : " << info.portName();
+	qDebug() << "Manufacturer: " << info.manufacturer(); //if showing manufacturer, means Qstring &name is good
+	qDebug() << "Busy		 : " << info.isBusy() << endl;
+
+	QSerialPort serial(serialPortName.c_str());
+
+	serial.open(QSerialPort::ReadWrite);
+	serial.setBaudRate(QSerialPort::Baud115200);
+	serial.setDataBits(QSerialPort::Data8);
+	serial.setParity(QSerialPort::NoParity);
+	serial.setStopBits(QSerialPort::OneStop);
+	serial.setFlowControl(QSerialPort::NoFlowControl);
+
+	if (!(serial.isOpen() && serial.isReadable()))
+	{
+		qDebug() << "No hay puerto.";
+
+		return;
+	}
+
+	qDebug() << "Is open : " << serial.isOpen() << endl;
+	qDebug() << "Is readable : " << serial.isReadable() << endl;
+
+	serial.write("Y");
+
+	while (serial.waitForReadyRead(2000))
+	{
+		if (serial.bytesAvailable() >= sizeof(int) * 2)
+		{
+			serial.read((char *) &lng, sizeof(int));
+			serial.read((char *) &lat, sizeof(int));
+		}
+	}
+
+	if (lat / 1000000 != 19)
+	{
+		return;
+	}
+	qDebug() << lng << " " << lat << endl;
+	send_localization(lng, lat);
+}
+
+void MainWindow::send_localization(int lng, int lat)
+{
+	double dlng;
+	double dlat;
+
+	dlng = static_cast<double>(lng);
+	dlat = static_cast<double>(lat);
+
+	dlng /= 1000000.0;
+	dlat /= 1000000.0;
+
+
 	QEventLoop eventLoop;
 	QNetworkAccessManager mgr;
 
 	QUrlQuery params;
-	params.addQueryItem("lng", ui->lneLng->text());
-	params.addQueryItem("lat", ui->lneLat->text());
+	params.addQueryItem("lng", QString::number(dlng));
+	params.addQueryItem("lat", QString::number(dlat));
 	params.addQueryItem("new_pothole", "Submit");
 
 	QObject::connect(&mgr, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
 
 	QNetworkRequest req(QUrl(QString("http://rainmaker.host56.com/maps/add_pothole.php")));
+
 	req.setRawHeader("Content-Type", "application/x-www-form-urlencoded");
 	mgr.post(req, params.query(QUrl::FullyEncoded).toUtf8());
+
 	QNetworkReply *reply = mgr.get(req);
 	eventLoop.exec(); // blocks stack until "finished()" has been called
 
