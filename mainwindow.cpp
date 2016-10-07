@@ -543,7 +543,7 @@ void MainWindow::send_localization(int lng, int lat)
 	double dlng;
 	double dlat;
 
-	dlng = static_cast<double>(lng);
+	dlng = static_cast<double>(lng); // (double) lng;
 	dlat = static_cast<double>(lat);
 
 	dlng /= 1000000.0;
@@ -570,13 +570,13 @@ void MainWindow::send_localization(int lng, int lat)
 
 	if (reply->error() == QNetworkReply::NoError) {
 		//success
-		qDebug() << "Success" <<reply->readAll();
+		qDebug() << "Success" << reply->readAll();
 		delete reply;
 	}
 	else
 	{
 		//failure
-		qDebug() << "Failure" <<reply->errorString();
+		qDebug() << "Failure" << reply->errorString();
 		delete reply;
 	}
 }
