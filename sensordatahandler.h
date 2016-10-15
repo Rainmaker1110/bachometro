@@ -1,8 +1,8 @@
 #ifndef SENSORDATAHANDLER_H
 #define SENSORDATAHANDLER_H
 
-#include <thread>
 #include <string>
+#include <thread>
 
 #include <QSerialPort>
 
@@ -25,10 +25,8 @@ class SensorDataHandler
 
 		QSerialPort * serialPort;
 
-		void read(function<void(char id, vector<int>&)> copyData);
-
-		template<typename ... T>
-		static void writeToFile(ofstream& file, vector<double>& v, T ... args);
+		template<typename T>
+		void read(const T& t, function<void(sensor_data&)> copyData);
 
 	public:
 		SensorDataHandler();
@@ -39,14 +37,11 @@ class SensorDataHandler
 		void setSerialPortName(string serialPortName);
 
 		void openSerial();
-
-		void startReading(function<void(char id, vector<int>&)> copyData);
-		void stopReading();
-
 		void closeSerial();
 
-		template<typename ... T>
-		static void writeToFile(string fileName, T ... args);
+		template<typename T>
+		void startReading(const T& t, function<void(sensor_data&)> copyData);
+		void stopReading();
 };
 
 #endif // SENSORDATAHANDLER_H

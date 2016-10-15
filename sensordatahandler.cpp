@@ -1,11 +1,6 @@
 #include <cstring>
 
-#include <iterator>
-
-#include <fstream>
-
-#include <QtSerialPort/QSerialPort>
-#include <QtSerialPort/QSerialPortInfo>
+#include <QtSerialPort>
 
 #include "sensordata.h"
 #include "sensordatahandler.h"
@@ -57,6 +52,11 @@ void SensorDataHandler::setSerialPortName(string serialPortName)
 
 void SensorDataHandler::openSerial()
 {
+	if (serialPort != NULL)
+	{
+		throw "Serial port already opened.";
+	}
+
 	serialPort = new QSerialPort(serialPortName.c_str());
 
 	serialPort->open(QSerialPort::ReadWrite);
@@ -66,78 +66,82 @@ void SensorDataHandler::openSerial()
 	serialPort->setStopBits(QSerialPort::OneStop);
 	serialPort->setFlowControl(QSerialPort::NoFlowControl);
 
-	if (!(serialPort.isOpen() && serialPort.isReadable()))
+	if (!serialPort->isOpen())
 	{
-		return;
+		delete serialPort;
+
+		throw "Serial port is not open.";
+	}
+
+	if (!serialPort->isReadable())
+	{
+		delete serialPort;
+
+		throw "Serial port is not redeable.";
 	}
 }
 
 void SensorDataHandler::closeSerial()
 {
-	if (serialPort != NULL)
+	if (serialPort == NULL)
 	{
-		delete serialPort;
-		serialPort = NULL;
+		throw "Serial port is not opened.";
 	}
+
+	delete serialPort;
+	serialPort = NULL;
 }
 
-void SensorDataHandler::startReading(function<void(char id, vector<int>&)> copyData)
+template<typename T>
+void SensorDataHandler::startReading(const T& t, function<void(sensor_data&)> copyData)
 {
-	if (samplingThread == NULL)
+	if (serialPort == NULL)
 	{
-		reading = true;
-
-		samplingThread = new std::thread(&SensorDataHandler::read, this, copyData);
+		throw "Serial port is not opened.";
 	}
+
+	if (samplingThread != NULL)
+	{
+		throw "Already reading from serial port.";
+	}
+
+	reading = true;
+
+	samplingThread = new std::thread(&SensorDataHandler::read, this, t, copyData);
 }
 
 void SensorDataHandler::stopReading()
 {
-	if (samplingThread != NULL)
+	if (samplingThread == NULL)
 	{
-		reading = false;
-
-		samplingThread->join();
-
-		delete samplingThread;
-		samplingThread = NULL;
-
-		delete serialPort;
-		serialPort = NULL;
+		throw "Serial port is not reading.";
 	}
+
+	reading = false;
+
+	samplingThread->join();
+
+	delete samplingThread;
+	samplingThread = NULL;
+
+	delete serialPort;
+	serialPort = NULL;
 }
 
-void SensorDataHandler::read(function<void(char id, vector<int>&)> copyData)
+template<typename T>
+void SensorDataHandler::read(const T& t, function<void(sensor_data&)> copyData)
 {
+	serialPort->write("Y");
+
 	while (serialPort->waitForReadyRead(SERIAL_TIMEOUT) && reading)
 	{
 		if (serialPort->bytesAvailable() >= SENSOR_TOTAL_SAMPLES + 1)
 		{
-			serialPort->read((char *) &data, sizeof(sensor_data));
+			serialPort->read(reinterpret_cast<char *>(&data), sizeof(sensor_data));
 
-			vector<int> buffer(begin(data.samples), end(data.samples));
-			copyData(data.id, buffer);
+			t.copyData(data);
 		}
 	}
-}
 
-template<typename ... T>
-void SensorDataHandler::writeToFile(string fileName, T ... args)
-{
-	ofstream file(fileName, ofstream::out | ofstream::binary);
-
-	writeToFile(file, args...);
-
-	file.close();
-}
-
-template<typename ... T>
-void SensorDataHandler::writeToFile(ofstream& file, vector<double>& v, T ... args)
-{
-	int vectorSize = v.size();
-
-	file.write(static_cast<const char *>(&vectorSize), sizeof(int));
-	file.write(static_cast<const char *>(v.data()), sizeof(double) * vectorSize);
-
-	writeToFile(file, forward<T>(args)...);
+	serialPort->write("\0");
 }
