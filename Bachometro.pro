@@ -18,17 +18,19 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     qcustomplot.cpp \
     sgsmooth.cpp \
-    sensordatahandler.cpp \
     coordinatesregister.cpp \
-    sensordatamanager.cpp
+    sensordatamanager.cpp \
+    arduinohandler.cpp \
+    sensordataprocessor.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
     sgsmooth.h \
-    sensordatahandler.h \
-    sensordata.h \
     coordinatesregister.h \
-    sensordatamanager.h
+    sensordatamanager.h \
+    arduinohandler.h \
+    arduinodata.h \
+    sensordataprocessor.h
 
 FORMS    += mainwindow.ui
 

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "sensordata.h"
+#include "arduinodata.h"
 
 using namespace std;
 
@@ -31,7 +31,7 @@ class SensorDataManager
 		int getOrder();
 		void setOrder(int order);
 
-		void setSensorData(sensor_data& data);
+		void setSensorData(char id, unsigned char * data);
 
 		vector<vector<double> >& getSensorsData();
 

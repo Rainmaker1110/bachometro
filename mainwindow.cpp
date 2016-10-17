@@ -13,13 +13,15 @@
 using namespace std;
 
 // Expand if needed
-int MainWindow::colors[] = {Qt::blue,
-							Qt::red,
-							Qt::green,
-							Qt::cyan,
-							Qt::magenta,
-							Qt::yellow,
-							Qt::gray};
+const int MainWindow::colors[] = {Qt::blue,
+								  Qt::red,
+								  Qt::green,
+								  Qt::cyan,
+								  Qt::magenta,
+								  Qt::yellow,
+								  Qt::gray};
+
+
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -27,8 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 
-	sensorsNum = 3;
-
+	// Large vector for x-axis values
 	xData.resize(100000);
 
 	// Fill x axis with increasing numbers, C++11
@@ -48,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 
 	// Set initial graphs
-	setGraphs();
+	setGraphs(3);
 
 	// give the axes some labels:
 	ui->customPlot->xAxis->setLabel("Time");
@@ -156,7 +157,7 @@ void MainWindow::on_btnLngLat_clicked()
 
 }
 
-void MainWindow::setGraphs()
+void MainWindow::setGraphs(int sensorsNum)
 {
 	ui->customPlot->clearGraphs();
 
@@ -174,12 +175,15 @@ void MainWindow::setGraphs()
 	}
 }
 
-void MainWindow::plotGraph()
+void MainWindow::plotGraph(vector<vector<double> >& vectors)
 {
-	/*
-	ui->customPlot->graph(0)->setData(xData, yData1);
-	ui->customPlot->graph(1)->setData(xData, yData2);
-	ui->customPlot->graph(2)->setData(xData, yData3);
-	*/
+	for (unsigned int i = 0; i < vectors.size(); i++)
+	{
+		QVector<double> v;
+		v.append(v);
+
+		ui->customPlot->graph(i)->setData(xData, v);
+	}
+
 	ui->customPlot->replot();
 }

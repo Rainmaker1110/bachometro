@@ -1,13 +1,17 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <vector>
+
 #include <QMainWindow>
 
 #include <QVector>
 #include <QTimer>
 
+using namespace std;
+
 namespace Ui {
-class MainWindow;
+	class MainWindow;
 }
 
 class MainWindow : public QMainWindow
@@ -32,16 +36,14 @@ class MainWindow : public QMainWindow
 	private:
 		Ui::MainWindow *ui;
 
-		static int colors[];
-
-		int sensorsNum;
+		static const int colors[];
 
 		QVector<double> xData;
 
 		QTimer * plotTimer;
 
-		void setGraphs();
-		void plotGraph();
+		void setGraphs(int sensorsNum);
+		void plotGraph(vector<vector<double> >& vectors);
 };
 
 #endif // MAINWINDOW_H

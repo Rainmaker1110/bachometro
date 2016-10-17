@@ -11,12 +11,35 @@
 
 CoordinatesRegister::CoordinatesRegister(string host)
 {
+	lng = 0;
+	lat = 0;
+
 	this->host = host;
 }
 
 CoordinatesRegister::~CoordinatesRegister()
 {
 
+}
+
+int CoordinatesRegister::getLng()
+{
+	return lng;
+}
+
+void CoordinatesRegister::setLng(int lng)
+{
+	this->lng = lng;
+}
+
+int CoordinatesRegister::getLat()
+{
+	return lat;
+}
+
+void CoordinatesRegister::setLat(int lat)
+{
+	this->lat = lat;
 }
 
 string CoordinatesRegister::getHost()
@@ -29,8 +52,20 @@ void CoordinatesRegister::setHost(string host)
 	this->host = host;
 }
 
-string CoordinatesRegister::sendCoordinates(double lng, double lat)
+void CoordinatesRegister::setCoordinates(int lng, int lat)
 {
+	this->lng = lng;
+	this->lat = lat;
+}
+
+string CoordinatesRegister::sendCoordinates()
+{
+	double dlng;
+	double dlat;
+
+	dlng = static_cast<double>(lng) / 1000000.0;
+	dlat = static_cast<double>(lat) / 1000000.0;
+
 	string response;
 
 	QEventLoop eventLoop;
@@ -39,8 +74,8 @@ string CoordinatesRegister::sendCoordinates(double lng, double lat)
 
 	QUrlQuery params;
 
-	params.addQueryItem("lng", QString::number(lng));
-	params.addQueryItem("lat", QString::number(lat));
+	params.addQueryItem("lng", QString::number(dlng));
+	params.addQueryItem("lat", QString::number(dlat));
 	params.addQueryItem("new_pothole", "Submit");
 
 	QObject::connect(&mgr, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));

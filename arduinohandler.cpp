@@ -2,14 +2,14 @@
 
 #include <QtSerialPort>
 
-#include "sensordata.h"
-#include "sensordatahandler.h"
+#include "arduinodata.h"
+#include "arduinohandler.h"
 
 using namespace std;
 
-const int SensorDataHandler::SERIAL_TIMEOUT = 20000; // Milliseconds
+const int ArduinoHandler::SERIAL_TIMEOUT = 20000; // Milliseconds
 
-SensorDataHandler::SensorDataHandler()
+ArduinoHandler::ArduinoHandler()
 {
 	reading = false;
 
@@ -20,14 +20,14 @@ SensorDataHandler::SensorDataHandler()
 	serialPort = NULL;
 }
 
-SensorDataHandler::SensorDataHandler(string serialPortName)
+ArduinoHandler::ArduinoHandler(string serialPortName)
 {
 	this->serialPortName = serialPortName;
 
-	SensorDataHandler();
+	ArduinoHandler();
 }
 
-SensorDataHandler::~SensorDataHandler()
+ArduinoHandler::~ArduinoHandler()
 {
 	if (samplingThread != NULL)
 	{
@@ -40,17 +40,17 @@ SensorDataHandler::~SensorDataHandler()
 	}
 }
 
-string SensorDataHandler::getSerialPortName()
+string ArduinoHandler::getSerialPortName()
 {
 	return serialPortName;
 }
 
-void SensorDataHandler::setSerialPortName(string serialPortName)
+void ArduinoHandler::setSerialPortName(string serialPortName)
 {
 	this->serialPortName = serialPortName;
 }
 
-void SensorDataHandler::openSerial()
+void ArduinoHandler::openSerial()
 {
 	if (serialPort != NULL)
 	{
@@ -81,7 +81,7 @@ void SensorDataHandler::openSerial()
 	}
 }
 
-void SensorDataHandler::closeSerial()
+void ArduinoHandler::closeSerial()
 {
 	if (serialPort == NULL)
 	{
@@ -92,8 +92,11 @@ void SensorDataHandler::closeSerial()
 	serialPort = NULL;
 }
 
-template<typename T>
-void SensorDataHandler::startReading(const T& t, function<void(sensor_data&)> copyData)
+template<typename T, typename S>
+void ArduinoHandler::startReading(const T& t,
+								  function<void(const T&,  char, unsigned char *)> copyData,
+								  const S& s,
+								  function<void(const S&, int, int)> copyCoordinates)
 {
 	if (serialPort == NULL)
 	{
@@ -107,10 +110,10 @@ void SensorDataHandler::startReading(const T& t, function<void(sensor_data&)> co
 
 	reading = true;
 
-	samplingThread = new std::thread(&SensorDataHandler::read, this, t, copyData);
+	samplingThread = new std::thread(&ArduinoHandler::read, this, t, copyData);
 }
 
-void SensorDataHandler::stopReading()
+void ArduinoHandler::stopReading()
 {
 	if (samplingThread == NULL)
 	{
@@ -128,18 +131,40 @@ void SensorDataHandler::stopReading()
 	serialPort = NULL;
 }
 
-template<typename T>
-void SensorDataHandler::read(const T& t, function<void(sensor_data&)> copyData)
+template<typename T, typename S>
+void ArduinoHandler::read(const T& t,
+						  function<void(const T&, char, unsigned char *)> copyData,
+						  const S& s,
+						  function<void(const S&, int, int)> copyCoordinates)
 {
+	char type;
+
+	int twoSize = sizeof(int) * 2;
+
 	serialPort->write("Y");
 
 	while (serialPort->waitForReadyRead(SERIAL_TIMEOUT) && reading)
 	{
-		if (serialPort->bytesAvailable() >= SENSOR_TOTAL_SAMPLES + 1)
-		{
-			serialPort->read(reinterpret_cast<char *>(&data), sizeof(sensor_data));
 
-			t.copyData(data);
+		serialPort->read(&type, sizeof(char));
+
+		if (type == 1)
+		{
+			while (serialPort->bytesAvailable() <= SENSOR_TOTAL_SAMPLES)
+			{
+				serialPort->read(reinterpret_cast<char *>(&data), sizeof(arduino_data));
+
+				copyData(t, data.id, data.samples);
+			}
+		}
+		else if (type == 2)
+		{
+			while (serialPort->bytesAvailable() <= twoSize)
+			{
+				serialPort->read(reinterpret_cast<char *>(&data), twoSize);
+
+				copyCoordinates(s, data.lng, data.lat);
+			}
 		}
 	}
 
