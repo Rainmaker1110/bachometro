@@ -19,7 +19,8 @@ class SensorDataManager
 		vector<vector<double> > sensorsData;
 
 	public:
-		SensorDataManager(int sensorsNumber);
+		SensorDataManager();
+		SensorDataManager(int sensorsNum);
 		~SensorDataManager();
 
 		bool isFilter();
@@ -31,8 +32,9 @@ class SensorDataManager
 		int getOrder();
 		void setOrder(int order);
 
-		void setSensorData(char id, unsigned char * data);
+		void setSensorNumber(int sensorsNum);
 
+		void setSensorData(char id, unsigned char * data);
 		vector<vector<double> >& getSensorsData();
 
 		void savgol(vector<double>& data);

@@ -54,7 +54,6 @@ void setup() {
   pc_ready = false;
 
   memset(index, 0, sizeof(char) * 3);
-  memset(sensor, 0, sizeof(char) * 3);
 
   sensor[0].sensor_id = 'A';
   sensor[1].sensor_id = 'B';

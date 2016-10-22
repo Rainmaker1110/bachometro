@@ -26,10 +26,7 @@ class ArduinoHandler
 		QSerialPort * serialPort;
 
 		template<typename T, typename S>
-		void read(const T& t,
-				  function<void(const T&,  char, unsigned char *)> copyData,
-				  const S& s,
-				  function<void(const S&, int, int)> copyCoordinates);
+		void read(T& t, S& s);
 
 	public:
 		ArduinoHandler();
@@ -39,14 +36,13 @@ class ArduinoHandler
 		string getSerialPortName();
 		void setSerialPortName(string serialPortName);
 
+		bool isReading();
+
 		void openSerial();
 		void closeSerial();
 
 		template<typename T, typename S>
-		void startReading(const T& t,
-						  function<void(const T&,  char, unsigned char *)> copyData,
-						  const S& s,
-						  function<void(const S&, int, int)> copyCoordinates);
+		void startReading(T& t, S& s);
 		void stopReading();
 };
 

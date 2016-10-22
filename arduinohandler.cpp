@@ -13,8 +13,6 @@ ArduinoHandler::ArduinoHandler()
 {
 	reading = false;
 
-	memset(data.samples, 0, sizeof(int) * SENSOR_TOTAL_SAMPLES);
-
 	samplingThread = NULL;
 
 	serialPort = NULL;
@@ -36,7 +34,7 @@ ArduinoHandler::~ArduinoHandler()
 
 	if (serialPort != NULL)
 	{
-		delete samplingThread;
+		delete serialPort;
 	}
 }
 
@@ -48,6 +46,11 @@ string ArduinoHandler::getSerialPortName()
 void ArduinoHandler::setSerialPortName(string serialPortName)
 {
 	this->serialPortName = serialPortName;
+}
+
+bool ArduinoHandler::isReading()
+{
+	return reading;
 }
 
 void ArduinoHandler::openSerial()
@@ -70,12 +73,16 @@ void ArduinoHandler::openSerial()
 	{
 		delete serialPort;
 
+		serialPort = NULL;
+
 		throw "Serial port is not open.";
 	}
 
 	if (!serialPort->isReadable())
 	{
 		delete serialPort;
+
+		serialPort = NULL;
 
 		throw "Serial port is not redeable.";
 	}
@@ -85,37 +92,16 @@ void ArduinoHandler::closeSerial()
 {
 	if (serialPort == NULL)
 	{
-		throw "Serial port is not opened.";
+		throw "Serial port is not open.";
 	}
 
 	delete serialPort;
 	serialPort = NULL;
 }
 
-template<typename T, typename S>
-void ArduinoHandler::startReading(const T& t,
-								  function<void(const T&,  char, unsigned char *)> copyData,
-								  const S& s,
-								  function<void(const S&, int, int)> copyCoordinates)
-{
-	if (serialPort == NULL)
-	{
-		throw "Serial port is not opened.";
-	}
-
-	if (samplingThread != NULL)
-	{
-		throw "Already reading from serial port.";
-	}
-
-	reading = true;
-
-	samplingThread = new std::thread(&ArduinoHandler::read, this, t, copyData);
-}
-
 void ArduinoHandler::stopReading()
 {
-	if (samplingThread == NULL)
+	if (samplingThread == NULL || !reading)
 	{
 		throw "Serial port is not reading.";
 	}
@@ -126,47 +112,4 @@ void ArduinoHandler::stopReading()
 
 	delete samplingThread;
 	samplingThread = NULL;
-
-	delete serialPort;
-	serialPort = NULL;
-}
-
-template<typename T, typename S>
-void ArduinoHandler::read(const T& t,
-						  function<void(const T&, char, unsigned char *)> copyData,
-						  const S& s,
-						  function<void(const S&, int, int)> copyCoordinates)
-{
-	char type;
-
-	int twoSize = sizeof(int) * 2;
-
-	serialPort->write("Y");
-
-	while (serialPort->waitForReadyRead(SERIAL_TIMEOUT) && reading)
-	{
-
-		serialPort->read(&type, sizeof(char));
-
-		if (type == 1)
-		{
-			while (serialPort->bytesAvailable() <= SENSOR_TOTAL_SAMPLES)
-			{
-				serialPort->read(reinterpret_cast<char *>(&data), sizeof(arduino_data));
-
-				copyData(t, data.id, data.samples);
-			}
-		}
-		else if (type == 2)
-		{
-			while (serialPort->bytesAvailable() <= twoSize)
-			{
-				serialPort->read(reinterpret_cast<char *>(&data), twoSize);
-
-				copyCoordinates(s, data.lng, data.lat);
-			}
-		}
-	}
-
-	serialPort->write("\0");
 }

@@ -6,16 +6,16 @@
 
 using namespace std;
 
-SensorDataManager::SensorDataManager(int sensorsNumber)
+SensorDataManager::SensorDataManager()
 {
 	filter = false;
+}
 
-	sensorsData.resize(sensorsNumber);
+SensorDataManager::SensorDataManager(int sensorsNum)
+{
+	setSensorNumber(sensorsNum);
 
-	for (vector<double>& v : sensorsData)
-	{
-		v.resize(SENSOR_TOTAL_SAMPLES);
-	}
+	SensorDataManager();
 }
 
 SensorDataManager::~SensorDataManager()
@@ -51,6 +51,16 @@ int SensorDataManager::getOrder()
 void SensorDataManager::setOrder(int order)
 {
 	this->order = order;
+}
+
+void SensorDataManager::setSensorNumber(int sensorsNum)
+{
+	sensorsData.resize(sensorsNum);
+
+	for (vector<double>& v : sensorsData)
+	{
+		v.resize(SENSOR_TOTAL_SAMPLES);
+	}
 }
 
 void SensorDataManager::setSensorData(char id, unsigned char * data)

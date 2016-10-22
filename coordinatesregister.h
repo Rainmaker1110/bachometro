@@ -14,6 +14,7 @@ class CoordinatesRegister
 		string host;
 
 	public:
+		CoordinatesRegister();
 		CoordinatesRegister(string host);
 		~CoordinatesRegister();
 

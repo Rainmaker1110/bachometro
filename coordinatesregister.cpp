@@ -9,12 +9,17 @@
 
 #include "coordinatesregister.h"
 
-CoordinatesRegister::CoordinatesRegister(string host)
+CoordinatesRegister::CoordinatesRegister()
 {
 	lng = 0;
 	lat = 0;
+}
 
+CoordinatesRegister::CoordinatesRegister(string host)
+{
 	this->host = host;
+
+	CoordinatesRegister();
 }
 
 CoordinatesRegister::~CoordinatesRegister()

@@ -10,10 +10,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "arduinohandler.templates.hpp"
+
 using namespace std;
 
 // Expand if needed
-const int MainWindow::colors[] = {Qt::blue,
+const int MainWindow::COLORS[] = {Qt::blue,
 								  Qt::red,
 								  Qt::green,
 								  Qt::cyan,
@@ -21,7 +23,9 @@ const int MainWindow::colors[] = {Qt::blue,
 								  Qt::yellow,
 								  Qt::gray};
 
+const int MainWindow::DEFAULT_SENSOR_NUMBER = 3;
 
+const string MainWindow::DEFAULT_HOST = "http://rainmaker.host56.com/maps/add_pothole.php";
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -40,7 +44,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	// Set values for Savitzky-Golay Filter
 	ui->cmbxWindow->addItems({"1", "2", "3", "4", "5", "6", "7", "8", "9"});
-	ui->cmbxGrade->addItems({"1", "2", "3", "4", "5", "6", "7", "8"});
+	ui->cmbxOrder->addItems({"1", "2", "3", "4", "5", "6", "7", "8"});
+
+	ui->cmbxSensorsNum->addItems({"1", "2", "3", "4", "5"});
 
 	// List available serial ports
 	for (QSerialPortInfo& serialPortInfo : QSerialPortInfo::availablePorts())
@@ -49,7 +55,19 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 
 	// Set initial graphs
-	setGraphs(3);
+	setGraphs(DEFAULT_SENSOR_NUMBER);
+	dataManager.setSensorNumber(DEFAULT_SENSOR_NUMBER);
+
+	coordsReg.setHost(DEFAULT_HOST);
+
+	ui->cmbxWindow->setCurrentText(QString::number(5));
+	ui->cmbxOrder->setCurrentText(QString::number(3));
+
+	dataManager.setWindow(5);
+	dataManager.setOrder(3);
+
+	ui->cmbxSensorsNum->setCurrentText(QString::number(DEFAULT_SENSOR_NUMBER));
+	ui->leHost->setText(QString::fromStdString(DEFAULT_HOST));
 
 	// give the axes some labels:
 	ui->customPlot->xAxis->setLabel("Time");
@@ -62,6 +80,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->customPlot->replot();
 
 	// Set user interaction
+
 	ui->customPlot->setInteraction(QCP::iRangeDrag, true);
 	ui->customPlot->setInteraction(QCP::iRangeZoom, true);
 }
@@ -73,53 +92,54 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_btnCapturar_clicked()
 {
-	/*
-	if (capturer == NULL)
+	if (!arduino.isReading())
 	{
-		ui->customPlot->xData->setRange(0, 300);
+		ui->customPlot->xAxis->setRange(0, 300);
 
-		capture = true;
-		capturer = new std::thread(&MainWindow::capture_data, this);
+		try
+		{
+			arduino.startReading(dataManager, coordsReg);
+		}
+		catch (const char * exception)
+		{
+			qDebug() << exception << endl;
 
-		timer = new QTimer(this);
-		connect(timer, SIGNAL(timeout()), this, SLOT(plotGraph()));
+			QMessageBox::critical(
+						this,
+						"Error en puerto serial",
+						exception);
 
-		timer->setSingleShot(false);
-		timer->start(50);
+			return;
+		}
+
+		plotTimer = new QTimer(this);
+		connect(plotTimer, SIGNAL(timeout()), this, SLOT(plotGraphs()));
+
+		plotTimer->setSingleShot(false);
+		plotTimer->start(50);
 
 		ui->btnCapturar->setText("Detener");
 	}
-	else if (capturer != NULL)
+	else
 	{
-		capture = false;
-		capturer->join();
+		try
+		{
+			arduino.stopReading();
+		}
+		catch (const char * exception)
+		{
+			qDebug() << exception << endl;
 
-		delete capturer;
-		capturer = NULL;
-		ui->lblCmNum->setText("0");
+			return;
+		}
 
-		ui->customPlot->graph(0)->setData(xData, yData1);
-		ui->customPlot->graph(1)->setData(xData, yData2);
-		ui->customPlot->graph(2)->setData(xData, yData3);
+		plotGraphs(dataManager.getSensorsData());
 
-		ui->customPlot->replot();
-
-		timer->stop();
-		delete timer;
-
-		//file = fopen(ui->leFile->text().toStdString().c_str(), "wb");
-
-		//fwrite(xData, sizeof(sensor_data), dataIndex, file);
-
-		//fclose(file);
-
-		yData1.fill(0, 0);
-		yData2.fill(0, 0);
-		yData3.fill(0, 0);
+		plotTimer->stop();
+		delete plotTimer;
 
 		ui->btnCapturar->setText("Capturar");
 	}
-	*/
 }
 
 void MainWindow::on_btnFile_clicked()
@@ -147,11 +167,6 @@ void MainWindow::on_btnPlot_clicked()
 
 }
 
-void MainWindow::on_btnExport_clicked()
-{
-
-}
-
 void MainWindow::on_btnLngLat_clicked()
 {
 
@@ -168,14 +183,14 @@ void MainWindow::setGraphs(int sensorsNum)
 		ui->customPlot->addGraph();
 
 		// Set color
-		ui->customPlot->graph(i)->setPen(QPen(colors[i]));
+		ui->customPlot->graph(i)->setPen(QPen(COLORS[i]));
 
 		// Set style
 		ui->customPlot->graph(i)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
 	}
 }
 
-void MainWindow::plotGraph(vector<vector<double> >& vectors)
+void MainWindow::plotGraphs(vector<vector<double> >& vectors)
 {
 	for (unsigned int i = 0; i < vectors.size(); i++)
 	{
@@ -186,4 +201,53 @@ void MainWindow::plotGraph(vector<vector<double> >& vectors)
 	}
 
 	ui->customPlot->replot();
+}
+
+void MainWindow::on_btnSave_clicked()
+{
+	dataManager.writeToFile(ui->leFile->text().toStdString());
+}
+
+void MainWindow::on_chbxFilter_clicked()
+{
+	if (ui->cmbxWindow->isEnabled())
+	{
+		ui->cmbxWindow->setEnabled(false);
+		ui->cmbxOrder->setEditable(false);
+
+		dataManager.setFilter(false);
+	}
+	else
+	{
+		ui->cmbxWindow->setEnabled(true);
+		ui->cmbxOrder->setEditable(true);
+
+		dataManager.setFilter(true);
+	}
+}
+
+void MainWindow::on_cmbxWindow_currentIndexChanged(const QString &arg1)
+{
+	dataManager.setWindow(arg1.toInt());
+}
+
+void MainWindow::on_cmbxOrder_currentIndexChanged(const QString &arg1)
+{
+	dataManager.setOrder(arg1.toInt());
+}
+
+void MainWindow::on_cmbxSensorsNum_currentIndexChanged(const QString &arg1)
+{
+	int sensorsNum;
+
+	sensorsNum = arg1.toInt();
+
+	setGraphs(sensorsNum);
+
+	dataManager.setSensorNumber(sensorsNum);
+}
+
+void MainWindow::on_btnHost_clicked()
+{
+	coordsReg.setHost(ui->leHost->text().toStdString());
 }

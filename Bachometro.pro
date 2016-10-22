@@ -15,7 +15,7 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
+    mainwindow.cpp \
     qcustomplot.cpp \
     sgsmooth.cpp \
     coordinatesregister.cpp \
@@ -30,8 +30,9 @@ HEADERS  += mainwindow.h \
     sensordatamanager.h \
     arduinohandler.h \
     arduinodata.h \
-    sensordataprocessor.h
+    sensordataprocessor.h \
+    arduinohandler.templates.hpp
 
-FORMS    += mainwindow.ui
+FORMS	+= mainwindow.ui
 
 CONFIG	+= c++11
