@@ -48,12 +48,18 @@ class MainWindow : public QMainWindow
 
 		void on_btnHost_clicked();
 
+		void on_cmbxSerialPorts_currentIndexChanged(const QString &arg1);
+
+		void plotGraphs();
+
 	private:
 		Ui::MainWindow *ui;
 
 		static const int COLORS[];
 		static const int DEFAULT_SENSOR_NUMBER;
 		static const string DEFAULT_HOST;
+
+		vector<vector<double> > * data;
 
 		ArduinoHandler arduino;
 
@@ -67,8 +73,9 @@ class MainWindow : public QMainWindow
 
 		QTimer * plotTimer;
 
+		QSerialPort serialPort;
+
 		void setGraphs(int sensorsNum);
-		void plotGraphs(vector<vector<double> >& vectors);
 };
 
 #endif // MAINWINDOW_H

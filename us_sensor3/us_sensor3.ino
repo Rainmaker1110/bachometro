@@ -15,8 +15,7 @@ typedef struct sample_info
 {
   char sensor_id;
   byte values[SAMPLES_MAX_READ];
-}
-sample_info;
+} sample_info;
 
 const char echoPins[3] = {5, 4, 3};
 

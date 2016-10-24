@@ -35,7 +35,7 @@ class SensorDataManager
 		void setSensorNumber(int sensorsNum);
 
 		void setSensorData(char id, unsigned char * data);
-		vector<vector<double> >& getSensorsData();
+		vector<vector<double> > * getSensorsData();
 
 		void savgol(vector<double>& data);
 

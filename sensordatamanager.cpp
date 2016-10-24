@@ -78,9 +78,9 @@ void SensorDataManager::setSensorData(char id, unsigned char * data)
 	}
 }
 
-vector<vector<double> >& SensorDataManager::getSensorsData()
+vector<vector<double> > * SensorDataManager::getSensorsData()
 {
-	return sensorsData;
+	return &sensorsData;
 }
 
 void SensorDataManager::writeToFile(string fileName)

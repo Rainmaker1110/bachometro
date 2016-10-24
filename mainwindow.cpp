@@ -92,25 +92,32 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_btnCapturar_clicked()
 {
-	if (!arduino.isReading())
+	if (!serialPort.isOpen())
 	{
+		data = dataManager.getSensorsData();
+
 		ui->customPlot->xAxis->setRange(0, 300);
 
-		try
-		{
-			arduino.startReading(dataManager, coordsReg);
-		}
-		catch (const char * exception)
-		{
-			qDebug() << exception << endl;
+		serialPort.setPortName(ui->cmbxSerialPorts->currentText().toStdString());
 
+		serialPort.open(QSerialPort::ReadWrite);
+		serialPort.setBaudRate(QSerialPort::Baud115200);
+		serialPort.setDataBits(QSerialPort::Data8);
+		serialPort.setParity(QSerialPort::NoParity);
+		serialPort.setStopBits(QSerialPort::OneStop);
+		serialPort.setFlowControl(QSerialPort::NoFlowControl);
+
+		if (!serialPort.isReadable())
+		{
 			QMessageBox::critical(
 						this,
 						"Error en puerto serial",
-						exception);
+						"El puerto serial no es legible.");
 
 			return;
 		}
+
+		// CONNECT readyRead()
 
 		plotTimer = new QTimer(this);
 		connect(plotTimer, SIGNAL(timeout()), this, SLOT(plotGraphs()));
@@ -125,6 +132,7 @@ void MainWindow::on_btnCapturar_clicked()
 		try
 		{
 			arduino.stopReading();
+			arduino.closeSerial();
 		}
 		catch (const char * exception)
 		{
@@ -133,7 +141,7 @@ void MainWindow::on_btnCapturar_clicked()
 			return;
 		}
 
-		plotGraphs(dataManager.getSensorsData());
+		plotGraphs();
 
 		plotTimer->stop();
 		delete plotTimer;
@@ -170,37 +178,6 @@ void MainWindow::on_btnPlot_clicked()
 void MainWindow::on_btnLngLat_clicked()
 {
 
-}
-
-void MainWindow::setGraphs(int sensorsNum)
-{
-	ui->customPlot->clearGraphs();
-
-	// Set graphs for QCustomPlot
-	for (int i = 0; i < sensorsNum; i++)
-	{
-		// Add graph
-		ui->customPlot->addGraph();
-
-		// Set color
-		ui->customPlot->graph(i)->setPen(QPen(COLORS[i]));
-
-		// Set style
-		ui->customPlot->graph(i)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
-	}
-}
-
-void MainWindow::plotGraphs(vector<vector<double> >& vectors)
-{
-	for (unsigned int i = 0; i < vectors.size(); i++)
-	{
-		QVector<double> v;
-		v.append(v);
-
-		ui->customPlot->graph(i)->setData(xData, v);
-	}
-
-	ui->customPlot->replot();
 }
 
 void MainWindow::on_btnSave_clicked()
@@ -247,7 +224,47 @@ void MainWindow::on_cmbxSensorsNum_currentIndexChanged(const QString &arg1)
 	dataManager.setSensorNumber(sensorsNum);
 }
 
+void MainWindow::on_cmbxSerialPorts_currentIndexChanged(const QString &arg1)
+{
+	serialPort.setPortName(arg1);
+}
+
 void MainWindow::on_btnHost_clicked()
 {
 	coordsReg.setHost(ui->leHost->text().toStdString());
+}
+
+void MainWindow::plotGraphs()
+{
+	for (unsigned int i = 0; i < data->size(); i++)
+	{
+		QVector<double> v;
+
+		for (double d : *(data->data() + i))
+		{
+			v.append(d);
+		}
+
+		ui->customPlot->graph(i)->setData(xData, v);
+	}
+
+	ui->customPlot->replot();
+}
+
+void MainWindow::setGraphs(int sensorsNum)
+{
+	ui->customPlot->clearGraphs();
+
+	// Set graphs for QCustomPlot
+	for (int i = 0; i < sensorsNum; i++)
+	{
+		// Add graph
+		ui->customPlot->addGraph();
+
+		// Set color
+		ui->customPlot->graph(i)->setPen(QPen(COLORS[i]));
+
+		// Set style
+		ui->customPlot->graph(i)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+	}
 }

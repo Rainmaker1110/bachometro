@@ -1,7 +1,9 @@
 
 #ifndef ARDUINOHANDLER_TEMPLATES_HPP
 #define ARDUINOHANDLER_TEMPLATES_HPP
-#include <iostream>
+
+#include <QDebug>
+
 #include "arduinohandler.h"
 
 using namespace std;
@@ -27,6 +29,8 @@ void ArduinoHandler::read(T& t, S& s)
 				serialPort->read(reinterpret_cast<char *>(&data), sizeof(arduino_data));
 
 				t.setSensorData(data.id, data.samples);
+
+				qDebug() << data.id << endl;
 			}
 		}
 		else if (type == 2)
@@ -36,6 +40,8 @@ void ArduinoHandler::read(T& t, S& s)
 				serialPort->read(reinterpret_cast<char *>(&data), twoSize);
 
 				s.setCoordinates(data.lng, data.lat);
+
+				qDebug() << data.lng << " " << data.lat << endl;
 			}
 		}
 	}
