@@ -11,9 +11,9 @@ SensorDataManager::SensorDataManager()
 	filter = false;
 }
 
-SensorDataManager::SensorDataManager(int sensorsNum)
+SensorDataManager::SensorDataManager(unsigned int sensorsNum)
 {
-	setSensorNumber(sensorsNum);
+	setSensorsNum(sensorsNum);
 
 	SensorDataManager();
 }
@@ -33,33 +33,38 @@ void SensorDataManager::setFilter(bool filter)
 	this->filter = filter;
 }
 
-int SensorDataManager::getWindow()
+unsigned int SensorDataManager::getWindow()
 {
 	return window;
 }
 
-void SensorDataManager::setWindow(int window)
+void SensorDataManager::setWindow(unsigned int window)
 {
 	this->window = window;
 }
 
-int SensorDataManager::getOrder()
+unsigned int SensorDataManager::getOrder()
 {
 	return order;
 }
 
-void SensorDataManager::setOrder(int order)
+void SensorDataManager::setOrder(unsigned int order)
 {
 	this->order = order;
 }
 
-void SensorDataManager::setSensorNumber(int sensorsNum)
+unsigned int SensorDataManager::getSensosrNum()
+{
+	return sensorsData.size();
+}
+
+void SensorDataManager::setSensorsNum(unsigned int sensorsNum)
 {
 	sensorsData.resize(sensorsNum);
 
 	for (vector<double>& v : sensorsData)
 	{
-		v.resize(SENSOR_TOTAL_SAMPLES);
+		v.resize(0);
 	}
 }
 
@@ -67,7 +72,7 @@ void SensorDataManager::setSensorData(char id, unsigned char * data)
 {
 	vector<double>& v = sensorsData[SENSOR_FIRST_ID - id];
 
-	for (int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
 	{
 		v.push_back(data[i]);
 	}
@@ -78,14 +83,14 @@ void SensorDataManager::setSensorData(char id, unsigned char * data)
 	}
 }
 
-vector<vector<double> > * SensorDataManager::getSensorsData()
+vector<double>& SensorDataManager::getSensorsData(unsigned int index)
 {
-	return &sensorsData;
+	return sensorsData[index];
 }
 
 void SensorDataManager::writeToFile(string fileName)
 {
-	int size;
+	unsigned int size;
 
 	ofstream file(fileName, ofstream::out | ofstream::binary);
 
@@ -110,7 +115,7 @@ void SensorDataManager::writeToFile(string fileName)
 
 void SensorDataManager::readFromFile(string fileName)
 {
-	int size;
+	unsigned int size;
 
 	double data;
 
@@ -126,7 +131,7 @@ void SensorDataManager::readFromFile(string fileName)
 
 		sensorsData[i].resize(size);
 
-		for (int j = 0; j < size; j++)
+		for (unsigned int j = 0; j < size; j++)
 		{
 			file.read(reinterpret_cast<char *>(&data), sizeof(double));
 
@@ -137,7 +142,7 @@ void SensorDataManager::readFromFile(string fileName)
 	file.close();
 }
 
-void SensorDataManager::matlabExport(string fileName, int dataIndex)
+void SensorDataManager::matlabExport(string fileName, unsigned int dataIndex)
 {
 	ofstream file(fileName);
 

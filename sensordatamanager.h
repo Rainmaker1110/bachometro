@@ -13,36 +13,37 @@ class SensorDataManager
 	private:
 		bool filter;
 
-		int window;
-		int order;
+		unsigned int window;
+		unsigned int order;
 
 		vector<vector<double> > sensorsData;
 
 	public:
 		SensorDataManager();
-		SensorDataManager(int sensorsNum);
+		SensorDataManager(unsigned int sensorsNum);
 		~SensorDataManager();
 
 		bool isFilter();
 		void setFilter(bool filter);
 
-		int getWindow();
-		void setWindow(int window);
+		unsigned int getWindow();
+		void setWindow(unsigned int window);
 
-		int getOrder();
-		void setOrder(int order);
+		unsigned int getOrder();
+		void setOrder(unsigned int order);
 
-		void setSensorNumber(int sensorsNum);
+		unsigned int getSensosrNum();
+		void setSensorsNum(unsigned int sensorsNum);
 
 		void setSensorData(char id, unsigned char * data);
-		vector<vector<double> > * getSensorsData();
+		vector<double>& getSensorsData(unsigned int index);
 
 		void savgol(vector<double>& data);
 
 		void writeToFile(string fileName);
 		void readFromFile(string fileName);
 
-		void matlabExport(string fileName, int dataIndex);
+		void matlabExport(string fileName, unsigned int dataIndex);
 };
 
 #endif // SENSORDATAMANAGER_H

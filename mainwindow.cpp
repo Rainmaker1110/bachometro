@@ -7,12 +7,17 @@
 
 #include <QSerialPortInfo>
 
+#include <QtConcurrent/QtConcurrent>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "arduinohandler.templates.hpp"
+#include "arduinodata.h"
 
 using namespace std;
+
+const int MainWindow::DEFAULT_SENSOR_NUMBER = 3;
+const int MainWindow::SERIAL_TIMEOUT = 2000; // Millis
 
 // Expand if needed
 const int MainWindow::COLORS[] = {Qt::blue,
@@ -23,8 +28,6 @@ const int MainWindow::COLORS[] = {Qt::blue,
 								  Qt::yellow,
 								  Qt::gray};
 
-const int MainWindow::DEFAULT_SENSOR_NUMBER = 3;
-
 const string MainWindow::DEFAULT_HOST = "http://rainmaker.host56.com/maps/add_pothole.php";
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -32,6 +35,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+
+	reading = false;
+
+	serialPort = NULL;
+
+	plotTimer = NULL;
 
 	// Large vector for x-axis values
 	xData.resize(100000);
@@ -56,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	// Set initial graphs
 	setGraphs(DEFAULT_SENSOR_NUMBER);
-	dataManager.setSensorNumber(DEFAULT_SENSOR_NUMBER);
+	dataManager.setSensorsNum(DEFAULT_SENSOR_NUMBER);
 
 	coordsReg.setHost(DEFAULT_HOST);
 
@@ -92,59 +101,45 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_btnCapturar_clicked()
 {
-	if (!serialPort.isOpen())
+	ui->customPlot->xAxis->setRange(0, 300);
+
+	if (!reading)
 	{
-		data = dataManager.getSensorsData();
-
-		ui->customPlot->xAxis->setRange(0, 300);
-
-		serialPort.setPortName(ui->cmbxSerialPorts->currentText().toStdString());
-
-		serialPort.open(QSerialPort::ReadWrite);
-		serialPort.setBaudRate(QSerialPort::Baud115200);
-		serialPort.setDataBits(QSerialPort::Data8);
-		serialPort.setParity(QSerialPort::NoParity);
-		serialPort.setStopBits(QSerialPort::OneStop);
-		serialPort.setFlowControl(QSerialPort::NoFlowControl);
-
-		if (!serialPort.isReadable())
+		reading = true;
+		try
 		{
-			QMessageBox::critical(
-						this,
-						"Error en puerto serial",
-						"El puerto serial no es legible.");
+			readThread = QtConcurrent::run(this, &MainWindow::readData);
+		}
+		catch (const char * exception)
+		{
+			QMessageBox::critical(this,
+								  "Serial port error.",
+								  exception);
 
 			return;
 		}
-
-		// CONNECT readyRead()
-
-		plotTimer = new QTimer(this);
-		connect(plotTimer, SIGNAL(timeout()), this, SLOT(plotGraphs()));
+		qDebug () << "BTN " << thread()->currentThreadId();
+		/*plotTimer = new QTimer();
 
 		plotTimer->setSingleShot(false);
-		plotTimer->start(50);
+		connect(plotTimer, SIGNAL(timeout()), this, SLOT(plotGraphs()));
+
+		plotTimer->start(100);*/
 
 		ui->btnCapturar->setText("Detener");
 	}
 	else
 	{
-		try
-		{
-			arduino.stopReading();
-			arduino.closeSerial();
-		}
-		catch (const char * exception)
-		{
-			qDebug() << exception << endl;
+		reading = false;
 
-			return;
-		}
+		/*plotTimer->stop();
+
+		delete plotTimer;
+		plotTimer = NULL;*/
+
+		readThread.waitForFinished();
 
 		plotGraphs();
-
-		plotTimer->stop();
-		delete plotTimer;
 
 		ui->btnCapturar->setText("Capturar");
 	}
@@ -221,12 +216,7 @@ void MainWindow::on_cmbxSensorsNum_currentIndexChanged(const QString &arg1)
 
 	setGraphs(sensorsNum);
 
-	dataManager.setSensorNumber(sensorsNum);
-}
-
-void MainWindow::on_cmbxSerialPorts_currentIndexChanged(const QString &arg1)
-{
-	serialPort.setPortName(arg1);
+	dataManager.setSensorsNum(sensorsNum);
 }
 
 void MainWindow::on_btnHost_clicked()
@@ -234,13 +224,101 @@ void MainWindow::on_btnHost_clicked()
 	coordsReg.setHost(ui->leHost->text().toStdString());
 }
 
+void MainWindow::readData()
+{
+	qDebug () << "readData" << thread()->currentThreadId();
+
+	bool readed;
+
+	unsigned char type;
+
+	int expectedSize;
+	char dato;
+
+	dataManager.setSensorsNum(ui->cmbxSensorsNum->currentText().toInt());
+
+	serialPort = new QSerialPort(ui->cmbxSerialPorts->currentText());
+
+	serialPort->open(QSerialPort::ReadWrite);
+	serialPort->setBaudRate(QSerialPort::Baud115200);
+	serialPort->setDataBits(QSerialPort::Data8);
+	serialPort->setParity(QSerialPort::NoParity);
+	serialPort->setStopBits(QSerialPort::OneStop);
+	serialPort->setFlowControl(QSerialPort::NoFlowControl);
+
+	if (!serialPort->isOpen())
+	{
+		serialPort->close();
+
+		delete serialPort;
+		serialPort = NULL;
+
+		throw "Serial port is closed.";
+
+		return;
+	}
+
+	if (!serialPort->isReadable())
+	{
+		serialPort->close();
+
+		delete serialPort;
+		serialPort = NULL;
+
+		throw "Serial port is not readable (busy).";
+
+		return;
+	}
+
+	qDebug() << "Y";
+	serialPort->write("Y");
+
+	while (serialPort->waitForReadyRead(3000) && reading)
+	{
+		serialPort->read(reinterpret_cast<char *>(&type), sizeof(char));
+
+		expectedSize = (type == 1) ? sizeof(SensorData) : sizeof(GPSData);
+
+		readed = true;
+		while (serialPort->waitForReadyRead(3000) && readed)
+		{
+			if (serialPort->bytesAvailable() >= expectedSize)
+			{
+				if (type == 1)
+				{
+					serialPort->read(reinterpret_cast<char *>(&sensor), sizeof(SensorData));
+					serialPort->read(&dato, sizeof(char));
+					qDebug() << (int) dato;
+					dataManager.setSensorData(sensor.id, sensor.samples);
+				}
+				else if (type == 2)
+				{
+					serialPort->read(reinterpret_cast<char *>(&gps), sizeof(GPSData));
+
+					coordsReg.setCoordinates(gps.lng, gps.lat);
+				}
+
+				readed = false;
+			}
+		}
+	}
+
+	;
+	serialPort->write("N");
+	serialPort->flush();
+	serialPort->close();
+
+	delete serialPort;
+	serialPort = NULL;
+}
+
 void MainWindow::plotGraphs()
 {
-	for (unsigned int i = 0; i < data->size(); i++)
+	for (unsigned int i = 0; i < dataManager.getSensosrNum(); i++)
 	{
 		QVector<double> v;
 
-		for (double d : *(data->data() + i))
+		for (double d : dataManager.getSensorsData(i))
 		{
 			v.append(d);
 		}

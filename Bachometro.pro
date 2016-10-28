@@ -20,7 +20,6 @@ SOURCES += main.cpp\
     sgsmooth.cpp \
     coordinatesregister.cpp \
     sensordatamanager.cpp \
-    arduinohandler.cpp \
     sensordataprocessor.cpp
 
 HEADERS  += mainwindow.h \
@@ -28,10 +27,8 @@ HEADERS  += mainwindow.h \
     sgsmooth.h \
     coordinatesregister.h \
     sensordatamanager.h \
-    arduinohandler.h \
     arduinodata.h \
-    sensordataprocessor.h \
-    arduinohandler.templates.hpp
+    sensordataprocessor.h
 
 FORMS	+= mainwindow.ui
 

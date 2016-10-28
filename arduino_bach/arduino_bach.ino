@@ -5,29 +5,29 @@
 
 /* --- DEFINES --- */
 
-#define SENSORS 3
+#define SENSORS 2
 
-#define SAMPLES_SIZE  100
+#define SAMPLES_SIZE	100
 
 /* -- Ultrasonic sensor pins -- */
-#define ECHO1   3
-#define ECHO2   4
-#define ECHO3   5
+#define ECHO1	 3
+#define ECHO2	 4
+#define ECHO3	 5
 #define TRIGGER 6
 
 /* -- Servo pins -- */
-#define SERVO  2
+#define SERVO	2
 
 /* -- LED -- */
 #define LED 13
 
 /* -- LCD pins -- */
-#define RS  7
-#define E   8
-#define D4  9
-#define D5  10
-#define D6  11
-#define D7  12
+#define RS	7
+#define E	 8
+#define D4	9
+#define D5	10
+#define D6	11
+#define D7	12
 // R/W to ground
 
 /* --- TYPEDEFS --- */
@@ -35,30 +35,38 @@ typedef struct SensorData
 {
   char id;
   byte values[SAMPLES_SIZE];
-} 
+}
 SensorData;
 
 typedef struct Position
 {
   long lng;
   long lat;
-} 
+}
 Position;
 
 /* --- CONSTANTS --- */
 const char echoPins[3] = {
-  ECHO1, ECHO2, ECHO3};
+  ECHO1, ECHO2, ECHO3
+};
 
 // Range of distance for ultrasonic sensor
-const int minDistance = 1;
-const int maxDistance = 200;
+const int MIN_DISTANCE = 1;
+const int MAX_DISTANCE = 200;
+
+const byte SENSOR_DATA = 1;
+const byte GPS_DATA = 2;
 
 /* --- GLOBAL VARIABLES --- */
-bool pcReady;
-
 bool ascending;
 
-char bufferCount[SENSORS];
+byte bloques;
+
+byte sensorIndex;
+
+byte bufferCount[SENSORS];
+
+unsigned char pcReady;
 
 int gpsData;
 
@@ -117,6 +125,9 @@ void setup()
   pos.lat = 0;
   pos.lng = 0;
 
+  bloques = 0;
+  sensorIndex = 0;
+
   angle = 0;
 
   servo.write(angle);
@@ -146,8 +157,11 @@ void loop()
   gps.get_position(&(pos.lat), &(pos.lng), &fix_age);
 
   // Sending GPS data (2)
-  Serial.write(2);
-  Serial.write((const byte *) &pos, sizeof(Position));
+  if (pcReady == 'Y')
+  {
+    Serial.write(GPS_DATA);
+    Serial.write((const byte *) &pos, sizeof(Position));
+  }
 
   /* --- SERVO MOVEMENT --- */
   angle += ascending ? 1 : -1;
@@ -163,10 +177,8 @@ void loop()
 
   if (angle == 0)
   {
-    ascending = true; 
+    ascending = true;
   }
-
-  int i = 0;
 
   /* --- ULTRASONIC SENSOR HANDLING --- */
   //for (i = 0; i < 3; i++)
@@ -180,25 +192,41 @@ void loop()
   digitalWrite(TRIGGER, LOW);
 
   // Calculate the distance (in cm) based on the speed of sound.
-  distance = pulseIn(echoPins[i], HIGH) / 58L;
+  distance = pulseIn(echoPins[sensorIndex], HIGH) / 58L;
 
   // Verifying distance is in range
-  if (distance >= minDistance && distance <= maxDistance)
+  if (distance >= MIN_DISTANCE && distance <= MAX_DISTANCE)
   {
-    sensor[i].values[bufferCount[i]++] = (byte) distance;
+    sensor[sensorIndex].values[bufferCount[sensorIndex]] = (byte) distance;
+    lcd.setCursor(0, 0);
+    lcd.print(sensor[sensorIndex].id);
+    lcd.print(": ");
+    lcd.print(sensor[sensorIndex].values[bufferCount[sensorIndex]]);
+    lcd.print("  ");
+
+    bufferCount[sensorIndex]++;
 
     // If buffer is full, it's send to computer
-    if (bufferCount[i] == SAMPLES_SIZE)
+    if (bufferCount[sensorIndex] == SAMPLES_SIZE)
     {
-      if (pcReady)
+      if (pcReady == 'Y')
       {
         // Sending sensor data (1)
-        Serial.write(1);
-        Serial.write((const byte *) (sensor + i), sizeof(SensorData));
+        Serial.write(SENSOR_DATA);
+        Serial.write((const byte *) (sensor + sensorIndex), sizeof(SensorData));
+        bloques++;
+        Serial.print(bloques);
       }
 
-      bufferCount[i] = 0;
+      bufferCount[sensorIndex] = 0;
     }
+  }
+
+  sensorIndex++;
+
+  if (sensorIndex == SENSORS)
+  {
+    sensorIndex = 0;
   }
 
   //Delay 10ms before next reading.
@@ -209,45 +237,30 @@ void loop()
 
   // GPS
   /*
-  lcd.setCursor(0, 0);
-   lcd.print("LAT: ");
-   lcd.print(pos.lat);
-   
-   lcd.setCursor(0, 1);
-   lcd.print("LNG: ");
-   lcd.print(pos.lng);
-   */
+  	lcd.setCursor(0, 0);
+  	lcd.print("LAT: ");
+  	lcd.print(pos.lat);
+
+  	lcd.setCursor(0, 1);
+  	lcd.print("LNG: ");
+  	lcd.print(pos.lng);
+  */
 
   // SERVO
   /*
-  lcd.setCursor(0, 0);
-   lcd.print("ANGLE:    ");
-   lcd.setCursor(7, 0);
-   lcd.print(angle);
-   */
+  	lcd.setCursor(0, 0);
+  	lcd.print("ANGLE:		");
+  	lcd.setCursor(7, 0);
+  	lcd.print(angle);
+  */
 
   // ULSTRASONIC SENSOR
-
-  lcd.setCursor(0, 0);
-  lcd.print(sensor[i].id);
-  lcd.print(":    ");
-  lcd.setCursor(5, 0);
-  lcd.print(distance);
+  /*
+    lcd.setCursor(0, 0);
+    lcd.print(sensor[i].id);
+    lcd.print(": ");
+    lcd.print(distance);
+    lcd.print("  ");
+  */
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

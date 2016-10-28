@@ -1,12 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <vector>
+#include <QVector>
+
+#include <QFuture>
 
 #include <QMainWindow>
-
-#include <QVector>
-#include <QTimer>
 
 #include "arduinohandler.h"
 #include "coordinatesregister.h"
@@ -48,20 +47,22 @@ class MainWindow : public QMainWindow
 
 		void on_btnHost_clicked();
 
-		void on_cmbxSerialPorts_currentIndexChanged(const QString &arg1);
-
 		void plotGraphs();
 
 	private:
 		Ui::MainWindow *ui;
 
-		static const int COLORS[];
 		static const int DEFAULT_SENSOR_NUMBER;
+		static const int SERIAL_TIMEOUT;
+
+		static const int COLORS[];
+
 		static const string DEFAULT_HOST;
 
-		vector<vector<double> > * data;
+		bool reading;
 
-		ArduinoHandler arduino;
+		SensorData sensor;
+		GPSData gps;
 
 		CoordinatesRegister coordsReg;
 
@@ -71,9 +72,13 @@ class MainWindow : public QMainWindow
 
 		QVector<double> xData;
 
+		QFuture<void> readThread;
+
+		QSerialPort * serialPort;
+
 		QTimer * plotTimer;
 
-		QSerialPort serialPort;
+		void readData();
 
 		void setGraphs(int sensorsNum);
 };
