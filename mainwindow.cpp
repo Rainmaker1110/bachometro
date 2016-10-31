@@ -20,7 +20,7 @@ const int MainWindow::DEFAULT_SENSOR_NUMBER = 3;
 const int MainWindow::SERIAL_TIMEOUT = 2000; // Millis
 
 // Expand if needed
-const int MainWindow::COLORS[] = {Qt::blue,
+const QColor MainWindow::COLORS[] = {Qt::blue,
 								  Qt::red,
 								  Qt::green,
 								  Qt::cyan,
@@ -63,12 +63,6 @@ MainWindow::MainWindow(QWidget *parent) :
 		ui->cmbxSerialPorts->addItem(serialPortInfo.portName());
 	}
 
-	// Set initial graphs
-	setGraphs(DEFAULT_SENSOR_NUMBER);
-	dataManager.setSensorsNum(DEFAULT_SENSOR_NUMBER);
-
-	coordsReg.setHost(DEFAULT_HOST);
-
 	ui->cmbxWindow->setCurrentText(QString::number(5));
 	ui->cmbxOrder->setCurrentText(QString::number(3));
 
@@ -89,9 +83,13 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->customPlot->replot();
 
 	// Set user interaction
-
 	ui->customPlot->setInteraction(QCP::iRangeDrag, true);
 	ui->customPlot->setInteraction(QCP::iRangeZoom, true);
+
+	// Set initial graphs
+	dataManager.setSensorsNum(DEFAULT_SENSOR_NUMBER);
+
+	coordsReg.setHost(DEFAULT_HOST);
 }
 
 MainWindow::~MainWindow()
@@ -119,12 +117,12 @@ void MainWindow::on_btnCapturar_clicked()
 			return;
 		}
 		qDebug () << "BTN " << thread()->currentThreadId();
-		/*plotTimer = new QTimer();
+		plotTimer = new QTimer();
 
 		plotTimer->setSingleShot(false);
 		connect(plotTimer, SIGNAL(timeout()), this, SLOT(plotGraphs()));
 
-		plotTimer->start(100);*/
+		plotTimer->start(100);
 
 		ui->btnCapturar->setText("Detener");
 	}
@@ -132,10 +130,10 @@ void MainWindow::on_btnCapturar_clicked()
 	{
 		reading = false;
 
-		/*plotTimer->stop();
+		plotTimer->stop();
 
 		delete plotTimer;
-		plotTimer = NULL;*/
+		plotTimer = NULL;
 
 		readThread.waitForFinished();
 
@@ -167,12 +165,14 @@ void MainWindow::on_btnFile_clicked()
 
 void MainWindow::on_btnPlot_clicked()
 {
-
+	dataManager.readFromFile(ui->leFile->text().toStdString());
+	setGraphs(dataManager.getSensosrNum());
+	plotGraphs();
 }
 
 void MainWindow::on_btnLngLat_clicked()
 {
-
+	coordsReg.sendCoordinates();
 }
 
 void MainWindow::on_btnSave_clicked()
@@ -182,17 +182,17 @@ void MainWindow::on_btnSave_clicked()
 
 void MainWindow::on_chbxFilter_clicked()
 {
-	if (ui->cmbxWindow->isEnabled())
+	if (!ui->chbxFilter->isChecked())
 	{
 		ui->cmbxWindow->setEnabled(false);
-		ui->cmbxOrder->setEditable(false);
+		ui->cmbxOrder->setEnabled(false);
 
 		dataManager.setFilter(false);
 	}
 	else
 	{
 		ui->cmbxWindow->setEnabled(true);
-		ui->cmbxOrder->setEditable(true);
+		ui->cmbxOrder->setEnabled(true);
 
 		dataManager.setFilter(true);
 	}
@@ -226,14 +226,9 @@ void MainWindow::on_btnHost_clicked()
 
 void MainWindow::readData()
 {
+	int arduinoSize = sizeof(ArduinoData);
+
 	qDebug () << "readData" << thread()->currentThreadId();
-
-	bool readed;
-
-	unsigned char type;
-
-	int expectedSize;
-	char dato;
 
 	dataManager.setSensorsNum(ui->cmbxSensorsNum->currentText().toInt());
 
@@ -253,7 +248,7 @@ void MainWindow::readData()
 		delete serialPort;
 		serialPort = NULL;
 
-		throw "Serial port is closed.";
+		qDebug() << "Serial port is closed.";
 
 		return;
 	}
@@ -265,48 +260,39 @@ void MainWindow::readData()
 		delete serialPort;
 		serialPort = NULL;
 
-		throw "Serial port is not readable (busy).";
+		qDebug() << "Serial port is not readable (busy).";
 
 		return;
 	}
 
-	qDebug() << "Y";
+	serialPort->clear();
 	serialPort->write("Y");
+	serialPort->flush();
+	qDebug() << "Y";
 
-	while (serialPort->waitForReadyRead(3000) && reading)
+	while (reading && serialPort->waitForReadyRead(3000))
 	{
-		serialPort->read(reinterpret_cast<char *>(&type), sizeof(char));
-
-		expectedSize = (type == 1) ? sizeof(SensorData) : sizeof(GPSData);
-
-		readed = true;
-		while (serialPort->waitForReadyRead(3000) && readed)
+		if (serialPort->bytesAvailable() >= arduinoSize)
 		{
-			if (serialPort->bytesAvailable() >= expectedSize)
+			qDebug() << "read(): " << serialPort->read(reinterpret_cast<char *>(&arduino), arduinoSize);
+			//qDebug() << arduino.id;
+
+			try
 			{
-				if (type == 1)
-				{
-					serialPort->read(reinterpret_cast<char *>(&sensor), sizeof(SensorData));
-					serialPort->read(&dato, sizeof(char));
-					qDebug() << (int) dato;
-					dataManager.setSensorData(sensor.id, sensor.samples);
-				}
-				else if (type == 2)
-				{
-					serialPort->read(reinterpret_cast<char *>(&gps), sizeof(GPSData));
-
-					coordsReg.setCoordinates(gps.lng, gps.lat);
-				}
-
-				readed = false;
+				dataManager.setSensorData(arduino.id, arduino.samples);
+				coordsReg.setCoordinates(arduino.lng, arduino.lat);
+			}
+			catch (const char * exception)
+			{
+				qDebug() << exception;
 			}
 		}
 	}
 
-	;
 	serialPort->write("N");
 	serialPort->flush();
 	serialPort->close();
+	qDebug() << "N";
 
 	delete serialPort;
 	serialPort = NULL;

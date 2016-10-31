@@ -5,9 +5,10 @@
 
 #include <QFuture>
 
+#include <QSerialPort>
+
 #include <QMainWindow>
 
-#include "arduinohandler.h"
 #include "coordinatesregister.h"
 #include "sensordatamanager.h"
 #include "sensordataprocessor.h"
@@ -55,14 +56,13 @@ class MainWindow : public QMainWindow
 		static const int DEFAULT_SENSOR_NUMBER;
 		static const int SERIAL_TIMEOUT;
 
-		static const int COLORS[];
+		static const QColor COLORS[];
 
 		static const string DEFAULT_HOST;
 
 		bool reading;
 
-		SensorData sensor;
-		GPSData gps;
+		ArduinoData arduino;
 
 		CoordinatesRegister coordsReg;
 

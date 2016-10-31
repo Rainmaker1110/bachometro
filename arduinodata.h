@@ -3,19 +3,15 @@
 
 static const char SENSOR_FIRST_ID = 'A';
 
-static const int SENSOR_TOTAL_SAMPLES = 100;
+static const int SENSOR_TOTAL_SAMPLES = 103;
 
-typedef struct SensorData
+typedef struct ArduinoData
 {
-
 		char id;
 		unsigned char samples[SENSOR_TOTAL_SAMPLES];
-} SensorData;
+		int lng;
+		int lat;
+} ArduinoData;
 
-typedef struct GPSData
-{
-	int lng;
-	int lat;
-} GPSData;
 
 #endif // ARDUINODATA_H

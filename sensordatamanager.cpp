@@ -70,7 +70,15 @@ void SensorDataManager::setSensorsNum(unsigned int sensorsNum)
 
 void SensorDataManager::setSensorData(char id, unsigned char * data)
 {
-	vector<double>& v = sensorsData[SENSOR_FIRST_ID - id];
+	int index = id - SENSOR_FIRST_ID;
+	if (index < 0 || static_cast<unsigned int>(index) > sensorsData.size())
+	{
+		throw "Index off of bounds: setSensorData()";
+
+		return;
+	}
+
+	vector<double>& v = sensorsData[index];
 
 	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
 	{
