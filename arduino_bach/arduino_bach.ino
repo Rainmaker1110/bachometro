@@ -9,10 +9,19 @@
 #define SAMPLES_SIZE	103
 
 /* -- Ultrasonic sensor pins -- */
+// ECHOS
 #define ECHO1	 3
 #define ECHO2	 4
 #define ECHO3	 5
-#define TRIGGER 6
+#define ECHO4  5
+#define ECHO5  5
+
+// TRIGGERS
+#define TRIGGER1 6
+#define TRIGGER2 6
+#define TRIGGER3 6
+#define TRIGGER4 6
+#define TRIGGER5 6
 
 /* -- Servo pins -- */
 #define SERVO	2
@@ -42,8 +51,12 @@ typedef struct ArduinoData
 } ArduinoData;
 
 /* --- CONSTANTS --- */
-const char echoPins[3] = {
-	ECHO1, ECHO2, ECHO3
+const char echoPins[] = {
+	ECHO1, ECHO2, ECHO3, ECHO4, ECHO5
+};
+
+const char triggerPins[] = {
+  TRIGGER1, TRIGGER2, TRIGGER3, TRIGGER4, TRIGGER5
 };
 
 // Range of distance for ultrasonic sensor
@@ -92,10 +105,15 @@ void setup()
 	pinMode(LED, OUTPUT);
 
 	/* -- Ultrasonic sensor pins -- */
-	pinMode(echoPins[0], INPUT);
-	pinMode(echoPins[1], INPUT);
-	pinMode(echoPins[2], INPUT);
-	pinMode(TRIGGER, OUTPUT);
+  for (int i = 0; i < SENSORS; i++)
+  {  
+      pinMode(echoPins[i], INPUT);
+  }
+  
+  for (int i = 0; i < SENSORS; i++)
+  {
+      pinMode(triggerPins[i], OUTPUT);
+  }
 
 	// LCD Initialization
 	lcd.begin(16, 2);
@@ -158,15 +176,15 @@ void loop()
 
 	// 10us ultrasonic cycle
 	digitalWrite(LED, LOW);
-	digitalWrite(TRIGGER, LOW);
+	digitalWrite(triggerPins[sensorIndex], LOW);
 
-	digitalWrite(TRIGGER, HIGH);
+	digitalWrite(triggerPins[sensorIndex], HIGH);
 	delayMicroseconds(10);
 
-	digitalWrite(TRIGGER, LOW);
+	digitalWrite(triggerPins[sensorIndex], LOW);
 
 	// Calculate the distance (in cm) based on the speed of sound.
-	distance = pulseIn(echoPins[sensorIndex], HIGH, 30000) / 58L;
+	distance = pulseIn(echoPins[sensorIndex], HIGH, 15000) / 58L;
 
 	// Verifying distance is in range
 	if (distance >= MIN_DISTANCE && distance <= MAX_DISTANCE)

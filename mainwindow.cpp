@@ -270,7 +270,7 @@ void MainWindow::readData()
 	serialPort->flush();
 	qDebug() << "Y";
 
-	while (reading && serialPort->waitForReadyRead(3000))
+	while (reading && serialPort->waitForReadyRead(5000))
 	{
 		if (serialPort->bytesAvailable() >= arduinoSize)
 		{
