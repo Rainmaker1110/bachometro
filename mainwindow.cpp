@@ -21,12 +21,12 @@ const int MainWindow::SERIAL_TIMEOUT = 2000; // Millis
 
 // Expand if needed
 const QColor MainWindow::COLORS[] = {Qt::blue,
-								  Qt::red,
-								  Qt::green,
-								  Qt::cyan,
-								  Qt::magenta,
-								  Qt::yellow,
-								  Qt::gray};
+									 Qt::red,
+									 Qt::green,
+									 Qt::cyan,
+									 Qt::magenta,
+									 Qt::yellow,
+									 Qt::gray};
 
 const string MainWindow::DEFAULT_HOST = "http://rainmaker.host56.com/maps/add_pothole.php";
 
@@ -77,7 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->customPlot->yAxis->setLabel("Distance");
 
 	// set axes ranges, so we see all data:
-	ui->customPlot->xAxis->setRange(0, 300);
+	ui->customPlot->xAxis->setRange(0, 800);
 	ui->customPlot->yAxis->setRange(0, 120);
 
 	ui->customPlot->replot();
@@ -85,6 +85,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	// Set user interaction
 	ui->customPlot->setInteraction(QCP::iRangeDrag, true);
 	ui->customPlot->setInteraction(QCP::iRangeZoom, true);
+
+	ui->customPlot->axisRect()->setRangeDrag(Qt::Horizontal);
+	ui->customPlot->axisRect()->setRangeZoom(Qt::Horizontal);
 
 	// Set initial graphs
 	dataManager.setSensorsNum(DEFAULT_SENSOR_NUMBER);
@@ -99,37 +102,61 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_btnCapturar_clicked()
 {
-	ui->customPlot->xAxis->setRange(0, 300);
+	ui->customPlot->xAxis->setRange(0, 800);
 
 	if (!reading)
 	{
-		reading = true;
-		try
+		dataManager.setSensorsNum(ui->cmbxSensorsNum->currentText().toInt());
+
+		serialPort = new QSerialPort(ui->cmbxSerialPorts->currentText());
+
+		serialPort->open(QSerialPort::ReadWrite);
+		serialPort->setBaudRate(QSerialPort::Baud115200);
+		serialPort->setDataBits(QSerialPort::Data8);
+		serialPort->setParity(QSerialPort::NoParity);
+		serialPort->setStopBits(QSerialPort::OneStop);
+		serialPort->setFlowControl(QSerialPort::NoFlowControl);
+
+		if (!serialPort->isOpen())
 		{
-			readThread = QtConcurrent::run(this, &MainWindow::readData);
-		}
-		catch (const char * exception)
-		{
-			QMessageBox::critical(this,
-								  "Serial port error.",
-								  exception);
+			serialPort->close();
+
+			delete serialPort;
+			serialPort = NULL;
+
+			QMessageBox::critical(this, "Serial port error.", "Serial port is closed.");
 
 			return;
 		}
+
+		if (!serialPort->isReadable())
+		{
+			serialPort->close();
+
+			delete serialPort;
+			serialPort = NULL;
+
+			QMessageBox::critical(this, "Serial port error.", "Serial port is not readable (busy).");
+
+			return;
+		}
+
+		readThread = QtConcurrent::run(this, &MainWindow::readData);
+
 		qDebug () << "BTN " << thread()->currentThreadId();
 		plotTimer = new QTimer();
 
 		plotTimer->setSingleShot(false);
 		connect(plotTimer, SIGNAL(timeout()), this, SLOT(plotGraphs()));
 
-		plotTimer->start(100);
+		plotTimer->start(500);
 
 		ui->btnCapturar->setText("Detener");
+
+		reading = true;
 	}
 	else
 	{
-		reading = false;
-
 		plotTimer->stop();
 
 		delete plotTimer;
@@ -140,6 +167,8 @@ void MainWindow::on_btnCapturar_clicked()
 		plotGraphs();
 
 		ui->btnCapturar->setText("Capturar");
+
+		reading = false;
 	}
 }
 
@@ -180,24 +209,6 @@ void MainWindow::on_btnSave_clicked()
 	dataManager.writeToFile(ui->leFile->text().toStdString());
 }
 
-void MainWindow::on_chbxFilter_clicked()
-{
-	if (!ui->chbxFilter->isChecked())
-	{
-		ui->cmbxWindow->setEnabled(false);
-		ui->cmbxOrder->setEnabled(false);
-
-		dataManager.setFilter(false);
-	}
-	else
-	{
-		ui->cmbxWindow->setEnabled(true);
-		ui->cmbxOrder->setEnabled(true);
-
-		dataManager.setFilter(true);
-	}
-}
-
 void MainWindow::on_cmbxWindow_currentIndexChanged(const QString &arg1)
 {
 	dataManager.setWindow(arg1.toInt());
@@ -229,41 +240,6 @@ void MainWindow::readData()
 	int arduinoSize = sizeof(ArduinoData);
 
 	qDebug () << "readData" << thread()->currentThreadId();
-
-	dataManager.setSensorsNum(ui->cmbxSensorsNum->currentText().toInt());
-
-	serialPort = new QSerialPort(ui->cmbxSerialPorts->currentText());
-
-	serialPort->open(QSerialPort::ReadWrite);
-	serialPort->setBaudRate(QSerialPort::Baud115200);
-	serialPort->setDataBits(QSerialPort::Data8);
-	serialPort->setParity(QSerialPort::NoParity);
-	serialPort->setStopBits(QSerialPort::OneStop);
-	serialPort->setFlowControl(QSerialPort::NoFlowControl);
-
-	if (!serialPort->isOpen())
-	{
-		serialPort->close();
-
-		delete serialPort;
-		serialPort = NULL;
-
-		qDebug() << "Serial port is closed.";
-
-		return;
-	}
-
-	if (!serialPort->isReadable())
-	{
-		serialPort->close();
-
-		delete serialPort;
-		serialPort = NULL;
-
-		qDebug() << "Serial port is not readable (busy).";
-
-		return;
-	}
 
 	serialPort->clear();
 	serialPort->write("Y");
@@ -330,5 +306,69 @@ void MainWindow::setGraphs(int sensorsNum)
 
 		// Set style
 		ui->customPlot->graph(i)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+	}
+}
+
+void MainWindow::on_btnRefreshPorts_clicked()
+{
+	ui->cmbxSerialPorts->clear();
+
+	for (QSerialPortInfo& serialPortInfo : QSerialPortInfo::availablePorts())
+	{
+		ui->cmbxSerialPorts->addItem(serialPortInfo.portName());
+	}
+}
+
+void MainWindow::on_chbxGraph_clicked(bool checked)
+{
+	if (checked)
+	{
+		QMessageBox::StandardButton reply;
+		reply = QMessageBox::question(this,
+									  "Habilitar graficación",
+									  "Esto desactivará la detección, ¿desea continuar?",
+									  QMessageBox::Yes|QMessageBox::No);
+
+		if (reply == QMessageBox::Yes)
+		{
+			ui->leFile->setEnabled(true);
+			ui->btnFile->setEnabled(true);
+			ui->btnSave->setEnabled(true);
+			ui->btnPlot->setEnabled(true);
+			ui->chbxFilter->setEnabled(true);
+			ui->customPlot->setEnabled(true);
+		}
+		else
+		{
+			ui->chbxGraph->setChecked(false);
+		}
+	}
+	else
+	{
+		ui->leFile->setEnabled(false);
+		ui->btnFile->setEnabled(false);
+		ui->btnSave->setEnabled(false);
+		ui->btnPlot->setEnabled(false);
+		ui->chbxFilter->setChecked(false);
+		ui->chbxFilter->setEnabled(false);
+		ui->customPlot->setEnabled(false);
+	}
+}
+
+void MainWindow::on_chbxFilter_toggled(bool checked)
+{
+	if (!checked)
+	{
+		ui->cmbxWindow->setEnabled(false);
+		ui->cmbxOrder->setEnabled(false);
+
+		dataManager.setFilter(false);
+	}
+	else
+	{
+		ui->cmbxWindow->setEnabled(true);
+		ui->cmbxOrder->setEnabled(true);
+
+		dataManager.setFilter(true);
 	}
 }

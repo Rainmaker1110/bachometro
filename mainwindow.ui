@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>900</width>
+    <width>1000</width>
     <height>700</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="btnCapturar">
     <property name="geometry">
      <rect>
-      <x>810</x>
+      <x>920</x>
       <y>70</y>
       <width>71</width>
       <height>23</height>
@@ -31,7 +31,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>60</y>
+      <y>80</y>
       <width>51</width>
       <height>16</height>
      </rect>
@@ -41,30 +41,39 @@
     </property>
    </widget>
    <widget class="QLineEdit" name="leFile">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>70</x>
-      <y>60</y>
+      <y>80</y>
       <width>181</width>
       <height>20</height>
      </rect>
     </property>
    </widget>
    <widget class="QCustomPlot" name="customPlot" native="true">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>20</x>
       <y>110</y>
-      <width>861</width>
+      <width>971</width>
       <height>531</height>
      </rect>
     </property>
    </widget>
    <widget class="QPushButton" name="btnFile">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>60</y>
+      <y>80</y>
       <width>21</width>
       <height>23</height>
      </rect>
@@ -74,10 +83,13 @@
     </property>
    </widget>
    <widget class="QPushButton" name="btnPlot">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>370</x>
-      <y>60</y>
+      <y>80</y>
       <width>71</width>
       <height>23</height>
      </rect>
@@ -87,10 +99,13 @@
     </property>
    </widget>
    <widget class="QPushButton" name="btnSave">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>290</x>
-      <y>60</y>
+      <y>80</y>
       <width>71</width>
       <height>23</height>
      </rect>
@@ -100,10 +115,13 @@
     </property>
    </widget>
    <widget class="QCheckBox" name="chbxFilter">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
-      <x>530</x>
-      <y>70</y>
+      <x>460</x>
+      <y>80</y>
       <width>61</width>
       <height>20</height>
      </rect>
@@ -118,8 +136,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>580</x>
-      <y>70</y>
+      <x>510</x>
+      <y>80</y>
       <width>51</width>
       <height>22</height>
      </rect>
@@ -131,8 +149,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>640</x>
-      <y>70</y>
+      <x>570</x>
+      <y>80</y>
       <width>51</width>
       <height>22</height>
      </rect>
@@ -141,8 +159,8 @@
    <widget class="QLabel" name="lblWinOrd">
     <property name="geometry">
      <rect>
-      <x>590</x>
-      <y>50</y>
+      <x>520</x>
+      <y>60</y>
       <width>101</width>
       <height>16</height>
      </rect>
@@ -154,7 +172,7 @@
    <widget class="QComboBox" name="cmbxSerialPorts">
     <property name="geometry">
      <rect>
-      <x>700</x>
+      <x>690</x>
       <y>70</y>
       <width>101</width>
       <height>22</height>
@@ -164,7 +182,7 @@
    <widget class="QPushButton" name="btnLngLat">
     <property name="geometry">
      <rect>
-      <x>760</x>
+      <x>870</x>
       <y>10</y>
       <width>121</width>
       <height>23</height>
@@ -190,7 +208,7 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>310</x>
+      <x>420</x>
       <y>10</y>
       <width>121</width>
       <height>16</height>
@@ -203,7 +221,7 @@
    <widget class="QLineEdit" name="leHost">
     <property name="geometry">
      <rect>
-      <x>410</x>
+      <x>520</x>
       <y>10</y>
       <width>261</width>
       <height>20</height>
@@ -213,7 +231,7 @@
    <widget class="QPushButton" name="btnHost">
     <property name="geometry">
      <rect>
-      <x>680</x>
+      <x>790</x>
       <y>10</y>
       <width>71</width>
       <height>23</height>
@@ -233,13 +251,45 @@
      </rect>
     </property>
    </widget>
+   <widget class="QPushButton" name="btnRefreshPorts">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>70</y>
+      <width>111</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Actualizar puertos</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chbxGraph">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>50</y>
+      <width>121</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Habilitar graficación</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>900</width>
+     <width>1000</width>
      <height>21</height>
     </rect>
    </property>

@@ -38,8 +38,6 @@ class SensorDataManager
 		void setSensorData(char id, unsigned char * data);
 		vector<double>& getSensorsData(unsigned int index);
 
-		void savgol(vector<double>& data);
-
 		void writeToFile(string fileName);
 		void readFromFile(string fileName);
 

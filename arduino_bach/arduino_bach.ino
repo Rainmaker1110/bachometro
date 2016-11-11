@@ -5,7 +5,7 @@
 
 /* --- DEFINES --- */
 
-#define SENSORS 3
+#define SENSORS 1
 #define SAMPLES_SIZE	103
 
 /* -- Ultrasonic sensor pins -- */
@@ -24,7 +24,7 @@
 #define TRIGGER5 6
 
 /* -- Servo pins -- */
-#define SERVO	2
+#define SERVO	3
 
 /* -- LED -- */
 #define LED 13
@@ -41,18 +41,18 @@
 /* --- TYPEDEFS --- */
 typedef struct ArduinoData
 {
-	// Sensor info
-	char id;
-	byte values[SAMPLES_SIZE];
+  // Sensor info
+  char id;
+  byte values[SAMPLES_SIZE];
 
-	// GPS info
-	long lng;
-	long lat;
+  // GPS info
+  long lng;
+  long lat;
 } ArduinoData;
 
 /* --- CONSTANTS --- */
 const char echoPins[] = {
-	ECHO1, ECHO2, ECHO3, ECHO4, ECHO5
+  ECHO1, ECHO2, ECHO3, ECHO4, ECHO5
 };
 
 const char triggerPins[] = {
@@ -81,12 +81,14 @@ int gpsData;
 
 int angle;
 
+int steps;
+
 long distance;
 
 unsigned long fix_age;
 unsigned long gpsSpeed;
 
-LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
+//LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
 
 Servo servo;
 
@@ -96,179 +98,181 @@ ArduinoData data[SENSORS];
 
 void setup()
 {
-	/* -- Serial initialization -- */
-	Serial.begin(115200); // PC comunication
-	Serial1.begin(38400); // GPS baud rate
+  /* -- Serial initialization -- */
+  Serial.begin(115200); // PC comunication
+  Serial1.begin(38400); // GPS baud rate
 
-	/* --- PIN MODES --- */
+  /* --- PIN MODES --- */
 
-	pinMode(LED, OUTPUT);
+  pinMode(LED, OUTPUT);
 
-	/* -- Ultrasonic sensor pins -- */
-  for (int i = 0; i < SENSORS; i++)
-  {  
-      pinMode(echoPins[i], INPUT);
-  }
-  
+  /* -- Ultrasonic sensor pins -- */
   for (int i = 0; i < SENSORS; i++)
   {
-      pinMode(triggerPins[i], OUTPUT);
+    pinMode(echoPins[i], INPUT);
   }
 
-	// LCD Initialization
-	lcd.begin(16, 2);
+  for (int i = 0; i < SENSORS; i++)
+  {
+    pinMode(triggerPins[i], OUTPUT);
+  }
 
-	// Attaching pin to servo
-	servo.attach(SERVO);
+  // LCD Initialization
+  //lcd.begin(16, 2);
 
-	// Initialize bufferCount
-	memset(bufferCount, 0, sizeof(char) * 3);
+  // Attaching pin to servo
+  servo.attach(SERVO);
 
-	// Sensors ID
-	data[0].id = 'A';
-	data[1].id = 'B';
-	data[2].id = 'C';
+  // Initialize bufferCount
+  memset(bufferCount, 0, sizeof(char) * 3);
 
-	// Initialize variables;
-	pcReady = false;
+  // Sensors ID
+  data[0].id = 'A';
+  data[1].id = 'B';
+  data[2].id = 'C';
 
-	ascending = true;
+  // Initialize variables;
+  pcReady = false;
 
-	bloques = 0;
-	sensorIndex = 0;
+  ascending = true;
 
-	angle = 0;
+  bloques = 0;
+  sensorIndex = 0;
 
-	servo.write(angle);
+  angle = 0;
+
+  servo.write(angle);
 }
 
 void loop()
 {
-	/* --- GETTING GPS DATA --- */
-	while (Serial1.available())
-	{
-		gps.encode(Serial1.read());
-	}
+  /* --- GETTING GPS DATA --- */
+  while (Serial1.available())
+  {
+    gps.encode(Serial1.read());
+  }
 
-	// Get encoded data
-	gps.get_position(&(data[sensorIndex].lat), &(data[sensorIndex].lng), &fix_age);
+  // Get encoded data
+  gps.get_position(&(data[sensorIndex].lat), &(data[sensorIndex].lng), &fix_age);
 
-	/* --- SERVO MOVEMENT --- */
-	angle += ascending ? 1 : -1;
+  /* --- ULTRASONIC SENSOR HANDLING --- */
+  //for (i = 0; i < 3; i++)
+  //{
 
-	// 1 degree steps
-	servo.write(angle);
+  digitalWrite(LED, LOW);
+  
+  // 10us ultrasonic cycle
+  digitalWrite(triggerPins[sensorIndex], LOW);
+  digitalWrite(triggerPins[sensorIndex], HIGH);
+  delayMicroseconds(10);
 
-	// Change direction
-	if (angle == 180)
-	{
-		ascending = false;
-	}
+  digitalWrite(triggerPins[sensorIndex], LOW);
 
-	if (angle == 0)
-	{
-		ascending = true;
-	}
+  // Calculate the distance (in cm) based on the speed of sound.
+  distance = pulseIn(echoPins[sensorIndex], HIGH, 11000) / 58L;
 
-	/* --- ULTRASONIC SENSOR HANDLING --- */
-	//for (i = 0; i < 3; i++)
-	//{
+  // Verifying distance is in range
+  if (distance >= MIN_DISTANCE && distance <= MAX_DISTANCE)
+  {
+    digitalWrite(LED, HIGH);
+    delayMicroseconds(200);
+    data[sensorIndex].values[bufferCount[sensorIndex]] = (byte) distance;
+    /*lcd.setCursor(0, 0);
+      lcd.print(data[sensorIndex].id);
+      lcd.print(": ");
+      lcd.print(data[sensorIndex].values[bufferCount[sensorIndex]]);
+      lcd.print("  ");*/
+    bufferCount[sensorIndex]++;
+    /*lcd.setCursor(0, 0);
+      lcd.print(data[sensorIndex].id);
+      lcd.print(": ");
+      lcd.print(bufferCount[sensorIndex]);
+      lcd.print("  ");*/
 
-	// 10us ultrasonic cycle
-	digitalWrite(LED, LOW);
-	digitalWrite(triggerPins[sensorIndex], LOW);
+    // If buffer is full, it's send to computer
+    if (bufferCount[sensorIndex] == SAMPLES_SIZE)
+    {
+      /*lcd.setCursor(0, 0);
+        lcd.print(data[sensorIndex].id);
+        lcd.print(": ");
+        lcd.print(bufferCount[sensorIndex]);
+        lcd.print("  ");*/
+      if (pcReady == 'Y')
+      {
+        Serial.write((const byte *) &(data[sensorIndex]), sizeof(ArduinoData));
+        //delay(5);
+        //Serial.write(bloques);
+      }
 
-	digitalWrite(triggerPins[sensorIndex], HIGH);
-	delayMicroseconds(10);
+      bufferCount[sensorIndex] = 0;
+    }
+  }
 
-	digitalWrite(triggerPins[sensorIndex], LOW);
+  sensorIndex++;
 
-	// Calculate the distance (in cm) based on the speed of sound.
-	distance = pulseIn(echoPins[sensorIndex], HIGH, 15000) / 58L;
+  if (sensorIndex == SENSORS)
+  {
+    sensorIndex = 0;
 
-	// Verifying distance is in range
-	if (distance >= MIN_DISTANCE && distance <= MAX_DISTANCE)
-	{
-		digitalWrite(LED, HIGH);
-		delayMicroseconds(200);
-		data[sensorIndex].values[bufferCount[sensorIndex]] = (byte) distance;
-		/*lcd.setCursor(0, 0);
-		lcd.print(data[sensorIndex].id);
-		lcd.print(": ");
-		lcd.print(data[sensorIndex].values[bufferCount[sensorIndex]]);
-		lcd.print("  ");*/
-		bufferCount[sensorIndex]++;
-		/*lcd.setCursor(0, 0);
-		lcd.print(data[sensorIndex].id);
-		lcd.print(": ");
-		lcd.print(bufferCount[sensorIndex]);
-		lcd.print("  ");*/
+    /* --- SERVO MOVEMENT --- */
+    angle += ascending ? 1 : -1;
 
-		// If buffer is full, it's send to computer
-		if (bufferCount[sensorIndex] == SAMPLES_SIZE)
-		{
-			/*lcd.setCursor(0, 0);
-			lcd.print(data[sensorIndex].id);
-			lcd.print(": ");
-			lcd.print(bufferCount[sensorIndex]);
-			lcd.print("  ");*/
-			if (pcReady == 'Y')
-			{
-				Serial.write((const byte *) &(data[sensorIndex]), sizeof(ArduinoData));
-				//delay(5);
-				//Serial.write(bloques);
-			}
+    // 1 degree steps
+    servo.write(angle);
 
-			bufferCount[sensorIndex] = 0;
-		}
-	}
+    // Change direction
+    if (angle == 180)
+    {
+      ascending = false;
+    }
 
-	sensorIndex++;
+    if (angle == 0)
+    {
+      ascending = true;
+    }
 
-	if (sensorIndex == SENSORS)
-	{
-		sensorIndex = 0;
-	}
+  }
 
-	//Delay 10ms before next reading.
-	//delay(500);
-	//}
+  //Delay 10ms before next reading.
+  //delay(500);
+  //}
 
-	/* --- LCD TESTING --- */
+  /* --- LCD TESTING --- */
 
-	// GPS
-	/*
-		lcd.setCursor(0, 0);
-		lcd.print("LAT: ");
-		lcd.print(pos.lat);
+  // GPS
+  /*
+  	lcd.setCursor(0, 0);
+  	lcd.print("LAT: ");
+  	lcd.print(pos.lat);
 
-		lcd.setCursor(0, 1);
-		lcd.print("LNG: ");
-		lcd.print(pos.lng);
-	*/
+  	lcd.setCursor(0, 1);
+  	lcd.print("LNG: ");
+  	lcd.print(pos.lng);
+  */
 
-	// SERVO
-	/*
-		lcd.setCursor(0, 0);
-		lcd.print("ANGLE:		");
-		lcd.setCursor(7, 0);
-		lcd.print(angle);
-	*/
+  // SERVO
+  /*
+  	lcd.setCursor(0, 0);
+  	lcd.print("ANGLE:		");
+  	lcd.setCursor(7, 0);
+  	lcd.print(angle);
+  */
 
-	// ULSTRASONIC SENSOR
-	/*
-		lcd.setCursor(0, 0);
-		lcd.print(sensor[i].id);
-		lcd.print(": ");
-		lcd.print(distance);
-		lcd.print("	");
-	*/
+  // ULSTRASONIC SENSOR
+  /*
+  	lcd.setCursor(0, 0);
+  	lcd.print(sensor[i].id);
+  	lcd.print(": ");
+  	lcd.print(distance);
+  	lcd.print("	");
+  */
+  //delay(1);
 }
 
 void serialEvent()
 {
-	// Enables or disables serial transmission
-	pcReady = Serial.read();
-	lcd.setCursor(0, 0);
-	lcd.write(pcReady);
+  // Enables or disables serial transmission
+  pcReady = Serial.read();
+  //lcd.setCursor(0, 0);
+  //lcd.write(pcReady);
 }

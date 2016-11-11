@@ -38,8 +38,6 @@ class MainWindow : public QMainWindow
 
 		void on_btnSave_clicked();
 
-		void on_chbxFilter_clicked();
-
 		void on_cmbxWindow_currentIndexChanged(const QString &arg1);
 
 		void on_cmbxOrder_currentIndexChanged(const QString &arg1);
@@ -49,6 +47,12 @@ class MainWindow : public QMainWindow
 		void on_btnHost_clicked();
 
 		void plotGraphs();
+
+		void on_btnRefreshPorts_clicked();
+
+		void on_chbxGraph_clicked(bool checked);
+
+		void on_chbxFilter_toggled(bool checked);
 
 	private:
 		Ui::MainWindow *ui;
