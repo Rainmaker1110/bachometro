@@ -35,7 +35,7 @@ class SensorDataManager
 		unsigned int getSensosrNum();
 		void setSensorsNum(unsigned int sensorsNum);
 
-		void setSensorData(char id, unsigned char * data);
+		void setSensorData(char id, unsigned short * data);
 		vector<double>& getSensorsData(unsigned int index);
 
 		void writeToFile(string fileName);

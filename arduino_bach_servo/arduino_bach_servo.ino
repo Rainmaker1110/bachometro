@@ -1,10 +1,12 @@
 /* --- INCLUDES --- */
+#include <LiquidCrystal.h>
+#include <Servo.h>
 #include <TinyGPS.h>
 
 /* --- DEFINES --- */
 
 #define SENSORS			3
-#define SAMPLES_SIZE	101
+#define SAMPLES_SIZE	103
 
 /* -- Ultrasonic sensor pins -- */
 // ECHOS
@@ -21,6 +23,9 @@
 #define TRIGGER4	6
 #define TRIGGER5	4
 
+/* -- Servo pins -- */
+#define SERVO	2
+
 /* -- LED -- */
 #define LED		13
 
@@ -36,16 +41,11 @@
 /* --- TYPEDEFS --- */
 typedef struct ArduinoData
 {
-	// Sensor ID
+	// Sensor info
 	char id;
+	byte values[SAMPLES_SIZE];
 
-	// Dummy data
-	char dummy;
-
-	// Samples buffer
-	int values[SAMPLES_SIZE];
-
-	// GPS data
+	// GPS info
 	long lng;
 	long lat;
 } ArduinoData;
@@ -67,6 +67,10 @@ const byte SENSOR_DATA = 1;
 const byte GPS_DATA = 2;
 
 /* --- GLOBAL VARIABLES --- */
+bool ascending;
+
+byte bloques;
+
 byte sensorIndex;
 
 byte bufferCount[SENSORS];
@@ -75,11 +79,18 @@ unsigned char pcReady;
 
 int gpsData;
 
+int angle;
+
+int steps;
+
 long distance;
-long utime;
 
 unsigned long fix_age;
 unsigned long gpsSpeed;
+
+//LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
+
+Servo servo;
 
 TinyGPS gps;
 
@@ -106,6 +117,12 @@ void setup()
 		pinMode(triggerPins[i], OUTPUT);
 	}
 
+	// LCD Initialization
+	//lcd.begin(16, 2);
+
+	// Attaching pin to servo
+	servo.attach(SERVO);
+
 	// Initialize bufferCount
 	memset(bufferCount, 0, sizeof(char) * 3);
 
@@ -117,7 +134,14 @@ void setup()
 	// Initialize variables;
 	pcReady = false;
 
+	ascending = true;
+
+	bloques = 0;
 	sensorIndex = 0;
+
+	angle = 0;
+
+	servo.write(angle);
 }
 
 void loop()
@@ -132,6 +156,9 @@ void loop()
 	gps.get_position(&(data[sensorIndex].lat), &(data[sensorIndex].lng), &fix_age);
 
 	/* --- ULTRASONIC SENSOR HANDLING --- */
+	//for (i = 0; i < 3; i++)
+	//{
+
 	digitalWrite(LED, LOW);
 	
 	// 10us ultrasonic cycle
@@ -142,25 +169,39 @@ void loop()
 	digitalWrite(triggerPins[sensorIndex], LOW);
 
 	// Calculate the distance (in cm) based on the speed of sound.
-	utime = pulseIn(echoPins[sensorIndex], HIGH, 11000);
-	distance = utime / 58L;
+	distance = pulseIn(echoPins[sensorIndex], HIGH, 11000) / 58L;
 
 	// Verifying distance is in range
 	if (distance >= MIN_DISTANCE && distance <= MAX_DISTANCE)
 	{
 		digitalWrite(LED, HIGH);
 		delayMicroseconds(500);
-
-		data[sensorIndex].values[bufferCount[sensorIndex]] = utime;
-		
+		data[sensorIndex].values[bufferCount[sensorIndex]] = (byte) distance;
+		/*lcd.setCursor(0, 0);
+			lcd.print(data[sensorIndex].id);
+			lcd.print(": ");
+			lcd.print(data[sensorIndex].values[bufferCount[sensorIndex]]);
+			lcd.print("	");*/
 		bufferCount[sensorIndex]++;
+		/*lcd.setCursor(0, 0);
+			lcd.print(data[sensorIndex].id);
+			lcd.print(": ");
+			lcd.print(bufferCount[sensorIndex]);
+			lcd.print("	");*/
 
 		// If buffer is full, it's send to computer
 		if (bufferCount[sensorIndex] == SAMPLES_SIZE)
 		{
+			/*lcd.setCursor(0, 0);
+				lcd.print(data[sensorIndex].id);
+				lcd.print(": ");
+				lcd.print(bufferCount[sensorIndex]);
+				lcd.print("	");*/
 			if (pcReady == 'Y')
 			{
 				Serial.write((const byte *) &(data[sensorIndex]), sizeof(ArduinoData));
+				//delay(5);
+				//Serial.write(bloques);
 			}
 
 			bufferCount[sensorIndex] = 0;
@@ -172,11 +213,66 @@ void loop()
 	if (sensorIndex == SENSORS)
 	{
 		sensorIndex = 0;
+
+		/* --- SERVO MOVEMENT --- */
+		angle += ascending ? 1 : -1;
+
+		// 1 degree steps
+		servo.write(angle);
+
+		// Change direction
+		if (angle == 180)
+		{
+			ascending = false;
+		}
+
+		if (angle == 0)
+		{
+			ascending = true;
+		}
+
 	}
+
+	//Delay 10ms before next reading.
+	//delay(500);
+	//}
+
+	/* --- LCD TESTING --- */
+
+	// GPS
+	/*
+		lcd.setCursor(0, 0);
+		lcd.print("LAT: ");
+		lcd.print(pos.lat);
+
+		lcd.setCursor(0, 1);
+		lcd.print("LNG: ");
+		lcd.print(pos.lng);
+	*/
+
+	// SERVO
+	/*
+		lcd.setCursor(0, 0);
+		lcd.print("ANGLE:		");
+		lcd.setCursor(7, 0);
+		lcd.print(angle);
+	*/
+
+	// ULSTRASONIC SENSOR
+	/*
+		lcd.setCursor(0, 0);
+		lcd.print(sensor[i].id);
+		lcd.print(": ");
+		lcd.print(distance);
+		lcd.print("	");
+	*/
+	//delay(1);
 }
 
 void serialEvent()
 {
 	// Enables or disables serial transmission
 	pcReady = Serial.read();
+	//lcd.setCursor(0, 0);
+	//lcd.write(pcReady);
 }

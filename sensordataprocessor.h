@@ -17,6 +17,8 @@ class SensorDataProcessor
 		vector<double> filterData;
 
 	public:
+		static void savgol(vector<double>& data);
+
 		SensorDataProcessor();
 		~SensorDataProcessor();
 
@@ -26,9 +28,7 @@ class SensorDataProcessor
 		unsigned int getOrder();
 		void setOrder(unsigned int order);
 
-		void setSensorData(char id, unsigned char * data);
-
-		void savgol(vector<double>& data);
+		void setSensorData(char id, unsigned short * data);
 };
 
 #endif // SENSORDATAPROCESSOR_H

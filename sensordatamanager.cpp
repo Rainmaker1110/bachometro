@@ -1,5 +1,5 @@
 #include <fstream>
-
+#include <QDebug>
 #include "sensordatamanager.h"
 
 #include "sgsmooth.h"
@@ -68,26 +68,36 @@ void SensorDataManager::setSensorsNum(unsigned int sensorsNum)
 	}
 }
 
-void SensorDataManager::setSensorData(char id, unsigned char * data)
+void SensorDataManager::setSensorData(char id, unsigned short * data)
 {
-	int index = id - SENSOR_FIRST_ID;
-	if (index < 0 || static_cast<unsigned int>(index) > sensorsData.size())
+	unsigned int index = id - SENSOR_FIRST_ID;
+
+	if (index > sensorsData.size())
 	{
 		throw "Index off of bounds: setSensorData()";
 
 		return;
 	}
 
+	vector<double> float_data(SENSOR_TOTAL_SAMPLES);
+	vector<double> filter_data(SENSOR_TOTAL_SAMPLES);
+
 	vector<double>& v = sensorsData[index];
 
 	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
 	{
-		v.push_back(data[i]);
+		float_data[i] = static_cast<double>(data[i]) / 58.27;
+		filter_data[i] = float_data[i];
 	}
 
 	if (filter)
 	{
-		calc_sgsmooth(v.size(), v.data(), window, order);
+		calc_sgsmooth(filter_data.size(), filter_data.data(), window, order);
+	}
+
+	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+	{
+		v.push_back(float_data[i] - filter_data[i]);
 	}
 }
 

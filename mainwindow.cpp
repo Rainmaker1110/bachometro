@@ -86,7 +86,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->customPlot->setInteraction(QCP::iRangeDrag, true);
 	ui->customPlot->setInteraction(QCP::iRangeZoom, true);
 
-	ui->customPlot->axisRect()->setRangeDrag(Qt::Horizontal);
 	ui->customPlot->axisRect()->setRangeZoom(Qt::Horizontal);
 
 	// Set initial graphs
@@ -102,58 +101,23 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_btnCapturar_clicked()
 {
+
 	ui->customPlot->xAxis->setRange(0, 800);
 
 	if (!reading)
 	{
-		dataManager.setSensorsNum(ui->cmbxSensorsNum->currentText().toInt());
-
-		serialPort = new QSerialPort(ui->cmbxSerialPorts->currentText());
-
-		serialPort->open(QSerialPort::ReadWrite);
-		serialPort->setBaudRate(QSerialPort::Baud115200);
-		serialPort->setDataBits(QSerialPort::Data8);
-		serialPort->setParity(QSerialPort::NoParity);
-		serialPort->setStopBits(QSerialPort::OneStop);
-		serialPort->setFlowControl(QSerialPort::NoFlowControl);
-
-		if (!serialPort->isOpen())
-		{
-			serialPort->close();
-
-			delete serialPort;
-			serialPort = NULL;
-
-			QMessageBox::critical(this, "Serial port error.", "Serial port is closed.");
-
-			return;
-		}
-
-		if (!serialPort->isReadable())
-		{
-			serialPort->close();
-
-			delete serialPort;
-			serialPort = NULL;
-
-			QMessageBox::critical(this, "Serial port error.", "Serial port is not readable (busy).");
-
-			return;
-		}
-
-		readThread = QtConcurrent::run(this, &MainWindow::readData);
-
 		qDebug () << "BTN " << thread()->currentThreadId();
+
 		plotTimer = new QTimer();
 
 		plotTimer->setSingleShot(false);
 		connect(plotTimer, SIGNAL(timeout()), this, SLOT(plotGraphs()));
 
-		plotTimer->start(500);
-
-		ui->btnCapturar->setText("Detener");
-
 		reading = true;
+
+		readThread = QtConcurrent::run(this, &MainWindow::readData);
+
+		plotTimer->start(500);
 	}
 	else
 	{
@@ -162,13 +126,11 @@ void MainWindow::on_btnCapturar_clicked()
 		delete plotTimer;
 		plotTimer = NULL;
 
+		reading = false;
+
 		readThread.waitForFinished();
 
 		plotGraphs();
-
-		ui->btnCapturar->setText("Capturar");
-
-		reading = false;
 	}
 }
 
@@ -239,6 +201,48 @@ void MainWindow::readData()
 {
 	int arduinoSize = sizeof(ArduinoData);
 
+	dataManager.setSensorsNum(ui->cmbxSensorsNum->currentText().toInt());
+
+	serialPort = new QSerialPort(ui->cmbxSerialPorts->currentText());
+
+	serialPort->open(QSerialPort::ReadWrite);
+	serialPort->setBaudRate(QSerialPort::Baud115200);
+	serialPort->setDataBits(QSerialPort::Data8);
+	serialPort->setParity(QSerialPort::NoParity);
+	serialPort->setStopBits(QSerialPort::OneStop);
+	serialPort->setFlowControl(QSerialPort::NoFlowControl);
+
+	if (!serialPort->isOpen())
+	{
+		serialPort->close();
+
+		delete serialPort;
+		serialPort = NULL;
+
+		reading = false;
+
+		QMessageBox::critical(this, "Serial port error.", "Serial port is closed.");
+
+		return;
+	}
+
+	if (!serialPort->isReadable())
+	{
+		serialPort->close();
+
+		delete serialPort;
+		serialPort = NULL;
+
+		reading = false;
+
+		QMessageBox::critical(this, "Serial port error.", "Serial port is not readable (busy).");
+
+		return;
+	}
+
+	ui->btnCapturar->setText("Detener");
+
+
 	qDebug () << "readData" << thread()->currentThreadId();
 
 	serialPort->clear();
@@ -251,12 +255,14 @@ void MainWindow::readData()
 		if (serialPort->bytesAvailable() >= arduinoSize)
 		{
 			qDebug() << "read(): " << serialPort->read(reinterpret_cast<char *>(&arduino), arduinoSize);
-			//qDebug() << arduino.id;
+			qDebug() << arduino.id;
 
 			try
 			{
 				dataManager.setSensorData(arduino.id, arduino.samples);
 				coordsReg.setCoordinates(arduino.lng, arduino.lat);
+
+				qDebug() << arduino.lng << " " << arduino.lat;
 			}
 			catch (const char * exception)
 			{
@@ -272,6 +278,9 @@ void MainWindow::readData()
 
 	delete serialPort;
 	serialPort = NULL;
+
+	reading = false;
+	ui->btnCapturar->setText("Capturar");
 }
 
 void MainWindow::plotGraphs()

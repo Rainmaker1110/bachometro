@@ -2,47 +2,6 @@
 
 #include "sgsmooth.h"
 
-SensorDataProcessor::SensorDataProcessor()
-{
-
-}
-
-SensorDataProcessor::~SensorDataProcessor()
-{
-
-}
-
-unsigned int SensorDataProcessor::getWindow()
-{
-	return window;
-}
-
-void SensorDataProcessor::setWindow(unsigned int window)
-{
-	this->window = window;
-}
-
-unsigned int SensorDataProcessor::getOrder()
-{
-	return order;
-}
-
-void SensorDataProcessor::setOrder(unsigned int order)
-{
-	this->order = order;
-}
-
-void SensorDataProcessor::setSensorData(char id, unsigned char * data)
-{
-	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
-	{
-		sensorsData[i] = data[i];
-		filterData[i] = data[i];
-	}
-
-		calc_sgsmooth(filterData.size(), filterData.data(), window, order);
-}
-
 void SensorDataProcessor::savgol(vector<double>& data)
 {
 	double sum;
@@ -95,4 +54,45 @@ void SensorDataProcessor::savgol(vector<double>& data)
 		sum = 0;
 	}
 	*/
+}
+
+SensorDataProcessor::SensorDataProcessor()
+{
+
+}
+
+SensorDataProcessor::~SensorDataProcessor()
+{
+
+}
+
+unsigned int SensorDataProcessor::getWindow()
+{
+	return window;
+}
+
+void SensorDataProcessor::setWindow(unsigned int window)
+{
+	this->window = window;
+}
+
+unsigned int SensorDataProcessor::getOrder()
+{
+	return order;
+}
+
+void SensorDataProcessor::setOrder(unsigned int order)
+{
+	this->order = order;
+}
+
+void SensorDataProcessor::setSensorData(char id, unsigned short * data)
+{
+	/*for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+	{
+		sensorsData[i] = data[i];
+		filterData[i] = data[i];
+	}
+
+	calc_sgsmooth(filterData.size(), filterData.data(), window, order);*/
 }

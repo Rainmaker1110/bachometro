@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>1000</width>
-    <height>700</height>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Detector de baches</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QPushButton" name="btnCapturar">
@@ -62,7 +62,7 @@
       <x>20</x>
       <y>110</y>
       <width>971</width>
-      <height>531</height>
+      <height>631</height>
      </rect>
     </property>
    </widget>
@@ -180,6 +180,9 @@
     </property>
    </widget>
    <widget class="QPushButton" name="btnLngLat">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>870</x>
@@ -193,6 +196,9 @@
     </property>
    </widget>
    <widget class="QLabel" name="lblSensorsNum">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -206,6 +212,9 @@
     </property>
    </widget>
    <widget class="QLabel" name="label">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>420</x>
@@ -219,6 +228,9 @@
     </property>
    </widget>
    <widget class="QLineEdit" name="leHost">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>520</x>
@@ -229,6 +241,9 @@
     </property>
    </widget>
    <widget class="QPushButton" name="btnHost">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>790</x>
@@ -242,6 +257,9 @@
     </property>
    </widget>
    <widget class="QComboBox" name="cmbxSensorsNum">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>140</x>
@@ -290,7 +308,7 @@
      <x>0</x>
      <y>0</y>
      <width>1000</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
   </widget>
