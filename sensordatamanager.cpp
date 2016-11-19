@@ -66,6 +66,12 @@ void SensorDataManager::setSensorsNum(unsigned int sensorsNum)
 	{
 		v.resize(0);
 	}
+
+	average.clear();
+	average.resize(sensorsNum, 0.0);
+
+	avgCount.clear();
+	avgCount.resize(sensorsNum, 0);
 }
 
 void SensorDataManager::setSensorData(char id, unsigned short * data)
@@ -84,6 +90,7 @@ void SensorDataManager::setSensorData(char id, unsigned short * data)
 
 	vector<double>& v = sensorsData[index];
 
+
 	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
 	{
 		float_data[i] = static_cast<double>(data[i]) / 58.27;
@@ -94,11 +101,30 @@ void SensorDataManager::setSensorData(char id, unsigned short * data)
 	{
 		calc_sgsmooth(filter_data.size(), filter_data.data(), window, order);
 	}
-
-	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+/*
+	if (avgCount[index] < 5)
 	{
-		v.push_back(float_data[i] - filter_data[i]);
+		for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+		{
+			average[index] += filter_data[i];
+		}
+
+		avgCount[index]++;
 	}
+	else if (avgCount[index] == 5)
+	{
+		average[index] /= 505.0;
+		avgCount[index]++;
+
+		qDebug() << average[index];
+	}
+	else
+	{*/
+		for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+		{
+			v.push_back(filter_data[i]);
+		}
+	//}
 }
 
 vector<double>& SensorDataManager::getSensorsData(unsigned int index)

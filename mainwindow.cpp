@@ -104,6 +104,14 @@ void MainWindow::on_btnCapturar_clicked()
 
 	ui->customPlot->xAxis->setRange(0, 800);
 
+	if (plotTimer != NULL)
+	{
+		plotTimer->stop();
+
+		delete plotTimer;
+		plotTimer = NULL;
+	}
+
 	if (!reading)
 	{
 		qDebug () << "BTN " << thread()->currentThreadId();
@@ -121,10 +129,13 @@ void MainWindow::on_btnCapturar_clicked()
 	}
 	else
 	{
-		plotTimer->stop();
+		if (plotTimer != NULL)
+		{
+			plotTimer->stop();
 
-		delete plotTimer;
-		plotTimer = NULL;
+			delete plotTimer;
+			plotTimer = NULL;
+		}
 
 		reading = false;
 
@@ -242,7 +253,6 @@ void MainWindow::readData()
 
 	ui->btnCapturar->setText("Detener");
 
-
 	qDebug () << "readData" << thread()->currentThreadId();
 
 	serialPort->clear();
@@ -254,15 +264,12 @@ void MainWindow::readData()
 	{
 		if (serialPort->bytesAvailable() >= arduinoSize)
 		{
-			qDebug() << "read(): " << serialPort->read(reinterpret_cast<char *>(&arduino), arduinoSize);
-			qDebug() << arduino.id;
+			qDebug() << "read(): " << serialPort->read(reinterpret_cast<char *>(&arduino), arduinoSize) << " ID: " << arduino.id;
 
 			try
 			{
 				dataManager.setSensorData(arduino.id, arduino.samples);
 				coordsReg.setCoordinates(arduino.lng, arduino.lat);
-
-				qDebug() << arduino.lng << " " << arduino.lat;
 			}
 			catch (const char * exception)
 			{
@@ -281,6 +288,7 @@ void MainWindow::readData()
 
 	reading = false;
 	ui->btnCapturar->setText("Capturar");
+	ui->lbllCoordsVal->setText("");
 }
 
 void MainWindow::plotGraphs()
@@ -298,6 +306,8 @@ void MainWindow::plotGraphs()
 	}
 
 	ui->customPlot->replot();
+
+	ui->lbllCoordsVal->setText(QString::number(coordsReg.getLat()).append(", ").append(QString::number(coordsReg.getLng())));
 }
 
 void MainWindow::setGraphs(int sensorsNum)
@@ -346,6 +356,8 @@ void MainWindow::on_chbxGraph_clicked(bool checked)
 			ui->btnPlot->setEnabled(true);
 			ui->chbxFilter->setEnabled(true);
 			ui->customPlot->setEnabled(true);
+
+			this->setFixedHeight(700);
 		}
 		else
 		{
@@ -361,6 +373,7 @@ void MainWindow::on_chbxGraph_clicked(bool checked)
 		ui->chbxFilter->setChecked(false);
 		ui->chbxFilter->setEnabled(false);
 		ui->customPlot->setEnabled(false);
+		this->setFixedHeight(150);
 	}
 }
 

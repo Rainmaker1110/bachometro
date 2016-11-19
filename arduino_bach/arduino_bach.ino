@@ -173,6 +173,11 @@ void loop()
 	{
 		sensorIndex = 0;
 	}
+
+ if (SENSORS == 1)
+ {
+  delay(3);
+ }
 }
 
 void serialEvent()

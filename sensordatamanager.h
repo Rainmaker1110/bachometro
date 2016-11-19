@@ -16,6 +16,9 @@ class SensorDataManager
 		unsigned int window;
 		unsigned int order;
 
+		vector<double> average;
+		vector<int> avgCount;
+
 		vector<vector<double> > sensorsData;
 
 	public:
