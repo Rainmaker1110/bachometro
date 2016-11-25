@@ -12,6 +12,7 @@ class SensorDataManager
 {
 	private:
 		bool filter;
+		bool detected;
 
 		unsigned int window;
 		unsigned int order;
@@ -28,6 +29,9 @@ class SensorDataManager
 
 		bool isFilter();
 		void setFilter(bool filter);
+
+		bool isDetected();
+		void setDetected(bool filter);
 
 		unsigned int getWindow();
 		void setWindow(unsigned int window);

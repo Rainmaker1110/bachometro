@@ -13,7 +13,6 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 TARGET = Bachometro
 TEMPLATE = app
 
-
 SOURCES += main.cpp\
     mainwindow.cpp \
     qcustomplot.cpp \
@@ -33,3 +32,5 @@ HEADERS  += mainwindow.h \
 FORMS	+= mainwindow.ui
 
 CONFIG	+= c++11
+
+PKGCONFIG += no-openssl

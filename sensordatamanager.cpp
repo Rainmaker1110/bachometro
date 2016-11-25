@@ -9,6 +9,7 @@ using namespace std;
 SensorDataManager::SensorDataManager()
 {
 	filter = false;
+	detected = false;
 }
 
 SensorDataManager::SensorDataManager(unsigned int sensorsNum)
@@ -31,6 +32,16 @@ bool SensorDataManager::isFilter()
 void SensorDataManager::setFilter(bool filter)
 {
 	this->filter = filter;
+}
+
+bool SensorDataManager::isDetected()
+{
+	return detected;
+}
+
+void SensorDataManager::setDetected(bool detected)
+{
+	this->detected = detected;
 }
 
 unsigned int SensorDataManager::getWindow()
@@ -101,7 +112,7 @@ void SensorDataManager::setSensorData(char id, unsigned short * data)
 	{
 		calc_sgsmooth(filter_data.size(), filter_data.data(), window, order);
 	}
-/*
+
 	if (avgCount[index] < 5)
 	{
 		for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
@@ -116,15 +127,25 @@ void SensorDataManager::setSensorData(char id, unsigned short * data)
 		average[index] /= 505.0;
 		avgCount[index]++;
 
-		qDebug() << average[index];
+		//qDebug() << average[index];
 	}
 	else
-	{*/
+	{
 		for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
 		{
+			if (filter)
+			{
+				//filter_data[i] = float_data[i] - filter_data[i];
+				filter_data[i] -= average[index];
+				if (filter_data[i] >= 10.0)
+				{
+					detected = true;
+				}
+			}
+
 			v.push_back(filter_data[i]);
 		}
-	//}
+	}
 }
 
 vector<double>& SensorDataManager::getSensorsData(unsigned int index)

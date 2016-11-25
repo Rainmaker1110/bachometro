@@ -125,7 +125,7 @@ void MainWindow::on_btnCapturar_clicked()
 
 		readThread = QtConcurrent::run(this, &MainWindow::readData);
 
-		plotTimer->start(500);
+		plotTimer->start(2000);
 	}
 	else
 	{
@@ -211,6 +211,7 @@ void MainWindow::on_btnHost_clicked()
 void MainWindow::readData()
 {
 	int arduinoSize = sizeof(ArduinoData);
+	int dataRead;
 
 	dataManager.setSensorsNum(ui->cmbxSensorsNum->currentText().toInt());
 
@@ -264,7 +265,8 @@ void MainWindow::readData()
 	{
 		if (serialPort->bytesAvailable() >= arduinoSize)
 		{
-			qDebug() << "read(): " << serialPort->read(reinterpret_cast<char *>(&arduino), arduinoSize) << " ID: " << arduino.id;
+			dataRead = serialPort->read(reinterpret_cast<char *>(&arduino), arduinoSize);
+			qDebug() << "read(): " << dataRead << " ID: " << arduino.id;
 
 			try
 			{
@@ -288,11 +290,23 @@ void MainWindow::readData()
 
 	reading = false;
 	ui->btnCapturar->setText("Capturar");
-	ui->lbllCoordsVal->setText("");
+	ui->lblCoordsVal->setText("");
+	ui->lblDetected->setText("");
 }
 
 void MainWindow::plotGraphs()
 {
+	if (dataManager.isDetected())
+	{
+		ui->lblDetected->setText("Detectado");
+		dataManager.setDetected(false);
+		coordsReg.sendCoordinates();
+	}
+	else
+	{
+		ui->lblDetected->setText("");
+	}
+
 	for (unsigned int i = 0; i < dataManager.getSensosrNum(); i++)
 	{
 		QVector<double> v;
@@ -307,7 +321,7 @@ void MainWindow::plotGraphs()
 
 	ui->customPlot->replot();
 
-	ui->lbllCoordsVal->setText(QString::number(coordsReg.getLat()).append(", ").append(QString::number(coordsReg.getLng())));
+	ui->lblCoordsVal->setText(QString::number(coordsReg.getLat()).append(", ").append(QString::number(coordsReg.getLng())));
 }
 
 void MainWindow::setGraphs(int sensorsNum)
@@ -324,7 +338,7 @@ void MainWindow::setGraphs(int sensorsNum)
 		ui->customPlot->graph(i)->setPen(QPen(COLORS[i]));
 
 		// Set style
-		ui->customPlot->graph(i)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+		ui->customPlot->graph(i)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 2));
 	}
 }
 
