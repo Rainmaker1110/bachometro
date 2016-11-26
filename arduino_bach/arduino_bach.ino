@@ -174,10 +174,10 @@ void loop()
 		sensorIndex = 0;
 	}
 
- //if (SENSORS == 1)
- //{
-  delay(3);
- //}
+ if (SENSORS == 1)
+ {
+  delay(8);
+ }
 }
 
 void serialEvent()

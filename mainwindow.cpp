@@ -125,7 +125,7 @@ void MainWindow::on_btnCapturar_clicked()
 
 		readThread = QtConcurrent::run(this, &MainWindow::readData);
 
-		plotTimer->start(2000);
+		plotTimer->start(1000);
 	}
 	else
 	{

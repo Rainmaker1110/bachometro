@@ -111,40 +111,42 @@ void SensorDataManager::setSensorData(char id, unsigned short * data)
 	if (filter)
 	{
 		calc_sgsmooth(filter_data.size(), filter_data.data(), window, order);
-	}
 
-	if (avgCount[index] < 5)
-	{
-		for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+		if (avgCount[index] < 5)
 		{
-			average[index] += filter_data[i];
-		}
-
-		avgCount[index]++;
-	}
-	else if (avgCount[index] == 5)
-	{
-		average[index] /= 505.0;
-		avgCount[index]++;
-
-		//qDebug() << average[index];
-	}
-	else
-	{
-		for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
-		{
-			if (filter)
+			for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
 			{
-				//filter_data[i] = float_data[i] - filter_data[i];
-				filter_data[i] -= average[index];
-				if (filter_data[i] >= 10.0)
-				{
-					detected = true;
-				}
+				average[index] += filter_data[i];
 			}
 
-			v.push_back(filter_data[i]);
+			avgCount[index]++;
+
+			return;
 		}
+		else if (avgCount[index] == 5)
+		{
+			average[index] /= 505.0;
+			avgCount[index]++;
+
+			qDebug() << average[index];
+			return;
+		}
+	}
+
+	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+	{
+		if (filter)
+		{
+			//filter_data[i] = float_data[i] - filter_data[i];
+			filter_data[i] -= average[index];
+
+			if (filter_data[i] >= 10.0)
+			{
+				detected = true;
+			}
+		}
+
+		v.push_back(filter_data[i]);
 	}
 }
 
