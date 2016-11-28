@@ -14,7 +14,7 @@ class SensorDataManager
 		bool filter;
 		bool detected;
 
-		unsigned int window;
+		unsigned int frame;
 		unsigned int order;
 
 		vector<double> average;
@@ -34,7 +34,7 @@ class SensorDataManager
 		void setDetected(bool filter);
 
 		unsigned int getWindow();
-		void setWindow(unsigned int window);
+		void setWindow(unsigned int frame);
 
 		unsigned int getOrder();
 		void setOrder(unsigned int order);

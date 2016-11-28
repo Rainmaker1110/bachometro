@@ -13,6 +13,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 TARGET = Bachometro
 TEMPLATE = app
 
+INCLUDEPATH += Eigen
+
 SOURCES += main.cpp\
     mainwindow.cpp \
     qcustomplot.cpp \
@@ -24,13 +26,13 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     qcustomplot.h \
     sgsmooth.h \
+    arduinodata.h \
     coordinatesregister.h \
     sensordatamanager.h \
-    arduinodata.h \
     sensordataprocessor.h
 
 FORMS	+= mainwindow.ui
 
 CONFIG	+= c++11
 
-PKGCONFIG += no-openssl
+PKGCONFIG += -no-openssl

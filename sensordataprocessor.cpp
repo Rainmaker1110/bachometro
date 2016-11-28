@@ -11,7 +11,7 @@ void SensorDataProcessor::savgol(vector<double>& data)
 	sum = 0.0;
 
 	// 2/3
-	// -3 12 17 12 - 3 35
+	// -3 12 17 12 -3 35
 	// -2 3 6 7 6 3 -2 12
 	// -21 14 39 54 59 54 39 14 -21 231
 

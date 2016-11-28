@@ -46,12 +46,12 @@ void SensorDataManager::setDetected(bool detected)
 
 unsigned int SensorDataManager::getWindow()
 {
-	return window;
+	return frame;
 }
 
 void SensorDataManager::setWindow(unsigned int window)
 {
-	this->window = window;
+	this->frame = window;
 }
 
 unsigned int SensorDataManager::getOrder()
@@ -110,7 +110,7 @@ void SensorDataManager::setSensorData(char id, unsigned short * data)
 
 	if (filter)
 	{
-		calc_sgsmooth(filter_data.size(), filter_data.data(), window, order);
+		calc_sgsmooth(filter_data.size(), filter_data.data(), frame, order);
 
 		if (avgCount[index] < 5)
 		{

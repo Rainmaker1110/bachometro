@@ -60,8 +60,8 @@ const char triggerPins[] = {
 };
 
 // Range of distance for ultrasonic sensor
-const int MIN_DISTANCE = 1;
-const int MAX_DISTANCE = 120;
+const int MIN_DISTANCE = 3;
+const int MAX_DISTANCE = 50;
 
 const byte SENSOR_DATA = 1;
 const byte GPS_DATA = 2;
@@ -149,7 +149,7 @@ void loop()
 	if (distance >= MIN_DISTANCE && distance <= MAX_DISTANCE)
 	{
 		digitalWrite(LED, HIGH);
-		delayMicroseconds(500);
+		delay(1);
 
 		data[sensorIndex].values[bufferCount[sensorIndex]] = utime;
 		
@@ -174,10 +174,10 @@ void loop()
 		sensorIndex = 0;
 	}
 
- if (SENSORS == 1)
- {
-  delay(8);
- }
+	if (SENSORS == 1)
+	{
+		delay(8);
+	}
 }
 
 void serialEvent()

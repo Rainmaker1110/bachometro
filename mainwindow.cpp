@@ -300,7 +300,7 @@ void MainWindow::plotGraphs()
 	{
 		ui->lblDetected->setText("Detectado");
 		dataManager.setDetected(false);
-		coordsReg.sendCoordinates();
+		//coordsReg.sendCoordinates();
 	}
 	else
 	{
