@@ -17,7 +17,7 @@
 using namespace std;
 
 const int MainWindow::DEFAULT_SENSOR_NUMBER = 3;
-const int MainWindow::SERIAL_TIMEOUT = 2000; // Millis
+const int MainWindow::SERIAL_TIMEOUT = 5000; // Millis
 
 // Expand if needed
 const QColor MainWindow::COLORS[] = {Qt::blue,
@@ -52,8 +52,16 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->leFile->setText(QDir::homePath() + "/datos01_01.dat");
 
 	// Set values for Savitzky-Golay Filter
-	ui->cmbxWindow->addItems({"1", "2", "3", "4", "5", "6", "7", "8", "9"});
-	ui->cmbxOrder->addItems({"1", "2", "3", "4", "5", "6", "7", "8"});
+	for (int i = 1; i <= 25; i++)
+	{
+		ui->cmbxWindow->addItem(QString::number(i));
+		ui->cmbxOrder->addItem(QString::number(i));
+	}
+
+	for (int i = 5; i <= 15; i++)
+	{
+		ui->cmbxThreshold->addItem(QString::number(i));
+	}
 
 	ui->cmbxSensorsNum->addItems({"1", "2", "3", "4", "5"});
 
@@ -65,20 +73,22 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->cmbxWindow->setCurrentText(QString::number(5));
 	ui->cmbxOrder->setCurrentText(QString::number(3));
+	ui->cmbxThreshold->setCurrentText(QString::number(9));
 
 	dataManager.setWindow(5);
 	dataManager.setOrder(3);
+	dataManager.setThreshold(9);
 
 	ui->cmbxSensorsNum->setCurrentText(QString::number(DEFAULT_SENSOR_NUMBER));
 	ui->leHost->setText(QString::fromStdString(DEFAULT_HOST));
 
 	// give the axes some labels:
-	ui->customPlot->xAxis->setLabel("Time");
-	ui->customPlot->yAxis->setLabel("Distance");
+	ui->customPlot->xAxis->setLabel("Número de muestra");
+	ui->customPlot->yAxis->setLabel("Distancia en cm");
 
 	// set axes ranges, so we see all data:
 	ui->customPlot->xAxis->setRange(0, 800);
-	ui->customPlot->yAxis->setRange(0, 120);
+	ui->customPlot->yAxis->setRange(0, 40);
 
 	ui->customPlot->replot();
 
@@ -101,7 +111,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_btnCapturar_clicked()
 {
+	if (ui->cmbxSerialPorts->count() == 0)
+	{
+		QMessageBox::critical(this, "Serial port error.", "No hay puertos seriales.");
 
+		return;
+	}
 	ui->customPlot->xAxis->setRange(0, 800);
 
 	if (plotTimer != NULL)
@@ -114,8 +129,6 @@ void MainWindow::on_btnCapturar_clicked()
 
 	if (!reading)
 	{
-		qDebug () << "BTN " << thread()->currentThreadId();
-
 		plotTimer = new QTimer();
 
 		plotTimer->setSingleShot(false);
@@ -254,14 +267,12 @@ void MainWindow::readData()
 
 	ui->btnCapturar->setText("Detener");
 
-	qDebug () << "readData" << thread()->currentThreadId();
-
 	serialPort->clear();
 	serialPort->write("Y");
 	serialPort->flush();
 	qDebug() << "Y";
 
-	while (reading && serialPort->waitForReadyRead(5000))
+	while (reading && serialPort->waitForReadyRead(SERIAL_TIMEOUT))
 	{
 		if (serialPort->bytesAvailable() >= arduinoSize)
 		{
@@ -272,6 +283,8 @@ void MainWindow::readData()
 			{
 				dataManager.setSensorData(arduino.id, arduino.samples);
 				coordsReg.setCoordinates(arduino.lng, arduino.lat);
+
+				//qDebug() << arduino.lng << "," << arduino.lat << " " << dataManager.isDetected();
 			}
 			catch (const char * exception)
 			{
@@ -289,6 +302,7 @@ void MainWindow::readData()
 	serialPort = NULL;
 
 	reading = false;
+
 	ui->btnCapturar->setText("Capturar");
 	ui->lblCoordsVal->setText("");
 	ui->lblDetected->setText("");
@@ -298,13 +312,13 @@ void MainWindow::plotGraphs()
 {
 	if (dataManager.isDetected())
 	{
-		ui->lblDetected->setText("Detectado");
+		ui->lblDetected->setStyleSheet("QLabel { background-color : lightgreen;}");
 		dataManager.setDetected(false);
-		//coordsReg.sendCoordinates();
+		coordsReg.sendCoordinates();
 	}
 	else
 	{
-		ui->lblDetected->setText("");
+		ui->lblDetected->setStyleSheet("QLabel { background-color : rgba(0, 0, 0, 0.0);}");
 	}
 
 	for (unsigned int i = 0; i < dataManager.getSensosrNum(); i++)
@@ -368,6 +382,7 @@ void MainWindow::on_chbxGraph_clicked(bool checked)
 			ui->btnFile->setEnabled(true);
 			ui->btnSave->setEnabled(true);
 			ui->btnPlot->setEnabled(true);
+			ui->btnPNG->setEnabled(true);
 			ui->chbxFilter->setEnabled(true);
 			ui->customPlot->setEnabled(true);
 
@@ -384,9 +399,11 @@ void MainWindow::on_chbxGraph_clicked(bool checked)
 		ui->btnFile->setEnabled(false);
 		ui->btnSave->setEnabled(false);
 		ui->btnPlot->setEnabled(false);
+		ui->btnPNG->setEnabled(false);
 		ui->chbxFilter->setChecked(false);
 		ui->chbxFilter->setEnabled(false);
 		ui->customPlot->setEnabled(false);
+
 		this->setFixedHeight(150);
 	}
 }
@@ -407,4 +424,14 @@ void MainWindow::on_chbxFilter_toggled(bool checked)
 
 		dataManager.setFilter(true);
 	}
+}
+
+void MainWindow::on_cmbxThreshold_currentIndexChanged(const QString &arg1)
+{
+	dataManager.setThreshold(arg1.toInt());
+}
+
+void MainWindow::on_btnPNG_clicked()
+{
+	ui->customPlot->savePng(ui->leFile->text().append(".png"));
 }

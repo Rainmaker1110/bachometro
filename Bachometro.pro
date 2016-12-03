@@ -11,11 +11,10 @@ QT       += core gui\
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = Bachometro
+
 TEMPLATE = app
 
-INCLUDEPATH += Eigen
-
-SOURCES += main.cpp\
+SOURCES += main.cpp \
     mainwindow.cpp \
     qcustomplot.cpp \
     sgsmooth.cpp \
@@ -35,4 +34,3 @@ FORMS	+= mainwindow.ui
 
 CONFIG	+= c++11
 
-PKGCONFIG += -no-openssl

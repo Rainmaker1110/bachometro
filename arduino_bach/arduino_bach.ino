@@ -5,6 +5,7 @@
 
 #define SENSORS			3
 #define SAMPLES_SIZE	101
+#define IN_TIMEOUT  4000
 
 /* -- Ultrasonic sensor pins -- */
 // ECHOS
@@ -61,7 +62,7 @@ const char triggerPins[] = {
 
 // Range of distance for ultrasonic sensor
 const int MIN_DISTANCE = 3;
-const int MAX_DISTANCE = 50;
+const int MAX_DISTANCE = 30;
 
 const byte SENSOR_DATA = 1;
 const byte GPS_DATA = 2;
@@ -142,13 +143,14 @@ void loop()
 	digitalWrite(triggerPins[sensorIndex], LOW);
 
 	// Calculate the distance (in cm) based on the speed of sound.
-	utime = pulseIn(echoPins[sensorIndex], HIGH, 11000);
+	utime = pulseIn(echoPins[sensorIndex], HIGH, IN_TIMEOUT);
 	distance = utime / 58L;
 
 	// Verifying distance is in range
 	if (distance >= MIN_DISTANCE && distance <= MAX_DISTANCE)
 	{
 		digitalWrite(LED, HIGH);
+    //delayMicroseconds(900);
 		delay(1);
 
 		data[sensorIndex].values[bufferCount[sensorIndex]] = utime;

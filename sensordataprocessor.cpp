@@ -10,16 +10,18 @@ void SensorDataProcessor::savgol(vector<double>& data)
 
 	sum = 0.0;
 
-	// 2/3
-	// -3 12 17 12 -3 35
-	// -2 3 6 7 6 3 -2 12
-	// -21 14 39 54 59 54 39 14 -21 231
+	/*
+	* 2/3
+	* -3 12 17 12 -3 35
+	* -2 3 6 7 6 3 -2 12
+	* -21 14 39 54 59 54 39 14 -21 231
 
-	// 4/5
-	// 5 -30 75 131 75 -30 5 231
-	// 15 -55 30 135 179 135 30 -55 15 429
+	* 4/5
+	* 5 -30 75 131 75 -30 5 231
+	* 15 -55 30 135 179 135 30 -55 15 429
+	*/
 
-	for (unsigned int i = 0; i < dataCopy.size(); i++)
+	/*for (unsigned int i = 0; i < dataCopy.size(); i++)
 	{
 		sum += (static_cast<int>(i) - 2 < 0) ? dataCopy[i] : -3.0 * dataCopy[i - 2];
 		sum += (static_cast<int>(i) - 1 < 0) ? dataCopy[i] : 12.0 * dataCopy[i - 1];
@@ -32,10 +34,9 @@ void SensorDataProcessor::savgol(vector<double>& data)
 		data[i] -= sum / 35.0;
 
 		sum = 0;
-	}
+	}*/
 
-	/*
-	for (int i = 0; i < size; i++)
+	/*for (int i = 0; i < size; i++)
 	{
 		sum += i - 3 < 0 ? 0.0 : 5.0 * data[i - 3];
 		sum += i - 2 < 0 ? 0.0 : -30.0 * data[i - 2];
@@ -54,6 +55,8 @@ void SensorDataProcessor::savgol(vector<double>& data)
 		sum = 0;
 	}
 	*/
+
+
 }
 
 SensorDataProcessor::SensorDataProcessor()
