@@ -21,7 +21,7 @@ void SensorDataProcessor::savgol(vector<double>& data)
 	* 15 -55 30 135 179 135 30 -55 15 429
 	*/
 
-	/*for (unsigned int i = 0; i < dataCopy.size(); i++)
+	for (unsigned int i = 0; i < dataCopy.size(); i++)
 	{
 		sum += (static_cast<int>(i) - 2 < 0) ? dataCopy[i] : -3.0 * dataCopy[i - 2];
 		sum += (static_cast<int>(i) - 1 < 0) ? dataCopy[i] : 12.0 * dataCopy[i - 1];
@@ -34,7 +34,7 @@ void SensorDataProcessor::savgol(vector<double>& data)
 		data[i] -= sum / 35.0;
 
 		sum = 0;
-	}*/
+	}
 
 	/*for (int i = 0; i < size; i++)
 	{
@@ -53,15 +53,12 @@ void SensorDataProcessor::savgol(vector<double>& data)
 		qDebug() << data[i];
 
 		sum = 0;
-	}
-	*/
-
-
+	}*/
 }
 
 SensorDataProcessor::SensorDataProcessor()
 {
-
+	reset();
 }
 
 SensorDataProcessor::~SensorDataProcessor()
@@ -69,14 +66,24 @@ SensorDataProcessor::~SensorDataProcessor()
 
 }
 
-unsigned int SensorDataProcessor::getWindow()
+bool SensorDataProcessor::isDetected()
 {
-	return window;
+	return detected;
 }
 
-void SensorDataProcessor::setWindow(unsigned int window)
+void SensorDataProcessor::setDetected(bool detected)
 {
-	this->window = window;
+	this->detected = detected;
+}
+
+unsigned int SensorDataProcessor::getFrame()
+{
+	return frame;
+}
+
+void SensorDataProcessor::setFrame(unsigned int window)
+{
+	this->frame = window;
 }
 
 unsigned int SensorDataProcessor::getOrder()
@@ -89,13 +96,63 @@ void SensorDataProcessor::setOrder(unsigned int order)
 	this->order = order;
 }
 
-void SensorDataProcessor::setSensorData(char id, unsigned short * data)
+unsigned int SensorDataProcessor::getThreshold()
 {
-	/*for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+	return threshold;
+}
+
+void SensorDataProcessor::setThreshold(unsigned int threshold)
+{
+	this->threshold = threshold;
+}
+
+void SensorDataProcessor::reset()
+{
+	detected = false;
+
+	sensorsData.resize(SENSOR_TOTAL_SAMPLES, 0.0);
+	filterData.resize(SENSOR_TOTAL_SAMPLES, 0.0);
+
+	average = 0.0;
+	avgCount = 0;
+}
+
+void SensorDataProcessor::processData(unsigned short * data)
+{
+	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
 	{
-		sensorsData[i] = data[i];
-		filterData[i] = data[i];
+		sensorsData[i] = static_cast<double>(data[i]) / 58.27;
+		filterData[i] = sensorsData[i];
 	}
 
-	calc_sgsmooth(filterData.size(), filterData.data(), window, order);*/
+	calc_sgsmooth(filterData.size(), filterData.data(), frame, order);
+
+	if (avgCount < 5)
+	{
+		for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+		{
+			average += filterData[i];
+		}
+
+		avgCount++;
+
+		return;
+	}
+	else if (avgCount == 5)
+	{
+		average /= 505.0;
+		avgCount++;
+
+		return;
+	}
+
+	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+	{
+		filterData[i] -= average;
+
+		if (filterData[i] >= threshold)
+		{
+			detected = true;
+		}
+	}
 }

@@ -44,12 +44,12 @@ void SensorDataManager::setDetected(bool detected)
 	this->detected = detected;
 }
 
-unsigned int SensorDataManager::getWindow()
+unsigned int SensorDataManager::getFrame()
 {
 	return frame;
 }
 
-void SensorDataManager::setWindow(unsigned int window)
+void SensorDataManager::setFrame(unsigned int window)
 {
 	this->frame = window;
 }
@@ -63,7 +63,6 @@ void SensorDataManager::setOrder(unsigned int order)
 {
 	this->order = order;
 }
-
 
 unsigned int SensorDataManager::getThreshold()
 {
@@ -82,6 +81,8 @@ unsigned int SensorDataManager::getSensosrNum()
 
 void SensorDataManager::setSensorsNum(unsigned int sensorsNum)
 {
+	detected = false;
+
 	sensorsData.resize(sensorsNum);
 
 	for (vector<double>& v : sensorsData)
@@ -102,7 +103,7 @@ void SensorDataManager::setSensorData(char id, unsigned short * data)
 
 	if (index > sensorsData.size())
 	{
-		throw "Index off of bounds: setSensorData()";
+		throw "setSensorData(): Index off of bounds.";
 
 		return;
 	}

@@ -35,8 +35,8 @@ class SensorDataManager
 		bool isDetected();
 		void setDetected(bool filter);
 
-		unsigned int getWindow();
-		void setWindow(unsigned int frame);
+		unsigned int getFrame();
+		void setFrame(unsigned int frame);
 
 		unsigned int getOrder();
 		void setOrder(unsigned int order);

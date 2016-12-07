@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1300</width>
+    <width>1000</width>
     <height>150</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="btnCapturar">
     <property name="geometry">
      <rect>
-      <x>1214</x>
+      <x>914</x>
       <y>80</y>
       <width>71</width>
       <height>23</height>
@@ -133,8 +133,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>560</x>
-      <y>80</y>
+      <x>180</x>
+      <y>50</y>
       <width>61</width>
       <height>20</height>
      </rect>
@@ -145,7 +145,20 @@
    </widget>
    <widget class="QComboBox" name="cmbxWindow">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>80</y>
+      <width>51</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="cmbxOrder">
+    <property name="enabled">
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -156,23 +169,10 @@
      </rect>
     </property>
    </widget>
-   <widget class="QComboBox" name="cmbxOrder">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>670</x>
-      <y>80</y>
-      <width>51</width>
-      <height>22</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QLabel" name="lblWinOrd">
     <property name="geometry">
      <rect>
-      <x>620</x>
+      <x>560</x>
       <y>60</y>
       <width>101</width>
       <height>16</height>
@@ -185,7 +185,7 @@
    <widget class="QComboBox" name="cmbxSerialPorts">
     <property name="geometry">
      <rect>
-      <x>984</x>
+      <x>684</x>
       <y>80</y>
       <width>101</width>
       <height>22</height>
@@ -198,7 +198,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>1214</x>
+      <x>914</x>
       <y>10</y>
       <width>71</width>
       <height>23</height>
@@ -230,7 +230,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>430</x>
+      <x>220</x>
       <y>10</y>
       <width>130</width>
       <height>16</height>
@@ -246,7 +246,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>530</x>
+      <x>320</x>
       <y>10</y>
       <width>270</width>
       <height>20</height>
@@ -259,9 +259,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>810</x>
+      <x>600</x>
       <y>10</y>
-      <width>80</width>
+      <width>71</width>
       <height>23</height>
      </rect>
     </property>
@@ -285,7 +285,7 @@
    <widget class="QPushButton" name="btnRefreshPorts">
     <property name="geometry">
      <rect>
-      <x>1094</x>
+      <x>794</x>
       <y>80</y>
       <width>111</width>
       <height>23</height>
@@ -317,7 +317,7 @@
    <widget class="QLabel" name="lblCoordsVal">
     <property name="geometry">
      <rect>
-      <x>1074</x>
+      <x>774</x>
       <y>10</y>
       <width>131</width>
       <height>21</height>
@@ -330,7 +330,7 @@
    <widget class="QLabel" name="lblCoords">
     <property name="geometry">
      <rect>
-      <x>994</x>
+      <x>694</x>
       <y>10</y>
       <width>81</width>
       <height>20</height>
@@ -343,7 +343,7 @@
    <widget class="QLabel" name="lblPothole">
     <property name="geometry">
      <rect>
-      <x>994</x>
+      <x>694</x>
       <y>50</y>
       <width>51</width>
       <height>16</height>
@@ -356,7 +356,7 @@
    <widget class="QLabel" name="lblDetected">
     <property name="geometry">
      <rect>
-      <x>1044</x>
+      <x>744</x>
       <y>39</y>
       <width>91</width>
       <height>31</height>
@@ -369,7 +369,7 @@
    <widget class="QComboBox" name="cmbxThreshold">
     <property name="geometry">
      <rect>
-      <x>1214</x>
+      <x>914</x>
       <y>50</y>
       <width>69</width>
       <height>22</height>
@@ -379,7 +379,7 @@
    <widget class="QLabel" name="lblThreshold">
     <property name="geometry">
      <rect>
-      <x>1150</x>
+      <x>850</x>
       <y>50</y>
       <width>51</width>
       <height>20</height>
@@ -405,13 +405,24 @@
      <string>Guardar PNG</string>
     </property>
    </widget>
+   <widget class="QWidget" name="formLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>450</x>
+      <y>90</y>
+      <width>160</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <layout class="QFormLayout" name="formLayout"/>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1300</width>
+     <width>1000</width>
      <height>21</height>
     </rect>
    </property>

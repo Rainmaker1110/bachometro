@@ -10,8 +10,15 @@ using namespace std;
 class SensorDataProcessor
 {
 	private:
-		unsigned int window;
+		bool detected;
+
+		unsigned int frame;
 		unsigned int order;
+
+		unsigned int threshold;
+
+		unsigned int average;
+		unsigned int avgCount;
 
 		vector<double> sensorsData;
 		vector<double> filterData;
@@ -22,13 +29,20 @@ class SensorDataProcessor
 		SensorDataProcessor();
 		~SensorDataProcessor();
 
-		unsigned int getWindow();
-		void setWindow(unsigned int window);
+		bool isDetected();
+		void setDetected(bool filter);
+
+		unsigned int getFrame();
+		void setFrame(unsigned int frame);
 
 		unsigned int getOrder();
 		void setOrder(unsigned int order);
 
-		void setSensorData(char id, unsigned short * data);
+		unsigned int getThreshold();
+		void setThreshold(unsigned int threshold);
+
+		void reset();
+		void processData(unsigned short * data);
 };
 
 #endif // SENSORDATAPROCESSOR_H
