@@ -54,6 +54,10 @@ class MainWindow : public QMainWindow
 
 		void on_chbxFilter_toggled(bool checked);
 
+		void on_cmbxThreshold_currentIndexChanged(const QString &arg1);
+
+		void on_btnPNG_clicked();
+
 	private:
 		Ui::MainWindow *ui;
 

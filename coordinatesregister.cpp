@@ -79,8 +79,8 @@ string CoordinatesRegister::sendCoordinates()
 
 	QUrlQuery params;
 
-	params.addQueryItem("lng", QString::number(dlng));
-	params.addQueryItem("lat", QString::number(dlat));
+	params.addQueryItem("lng", QString::number(dlng, 'f'));
+	params.addQueryItem("lat", QString::number(dlat, 'f'));
 	params.addQueryItem("new_pothole", "Submit");
 
 	QObject::connect(&mgr, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));

@@ -44,12 +44,12 @@ void SensorDataManager::setDetected(bool detected)
 	this->detected = detected;
 }
 
-unsigned int SensorDataManager::getWindow()
+unsigned int SensorDataManager::getFrame()
 {
 	return frame;
 }
 
-void SensorDataManager::setWindow(unsigned int window)
+void SensorDataManager::setFrame(unsigned int window)
 {
 	this->frame = window;
 }
@@ -64,6 +64,16 @@ void SensorDataManager::setOrder(unsigned int order)
 	this->order = order;
 }
 
+unsigned int SensorDataManager::getThreshold()
+{
+	return threshold;
+}
+
+void SensorDataManager::setThreshold(unsigned int threshold)
+{
+	this->threshold = threshold;
+}
+
 unsigned int SensorDataManager::getSensosrNum()
 {
 	return sensorsData.size();
@@ -71,6 +81,8 @@ unsigned int SensorDataManager::getSensosrNum()
 
 void SensorDataManager::setSensorsNum(unsigned int sensorsNum)
 {
+	detected = false;
+
 	sensorsData.resize(sensorsNum);
 
 	for (vector<double>& v : sensorsData)
@@ -91,7 +103,7 @@ void SensorDataManager::setSensorData(char id, unsigned short * data)
 
 	if (index > sensorsData.size())
 	{
-		throw "Index off of bounds: setSensorData()";
+		throw "setSensorData(): Index off of bounds.";
 
 		return;
 	}
@@ -140,7 +152,7 @@ void SensorDataManager::setSensorData(char id, unsigned short * data)
 			//filter_data[i] = float_data[i] - filter_data[i];
 			filter_data[i] -= average[index];
 
-			if (filter_data[i] >= 10.0)
+			if (filter_data[i] >= threshold)
 			{
 				detected = true;
 			}
@@ -204,9 +216,16 @@ void SensorDataManager::readFromFile(string fileName)
 
 			sensorsData[i][j] = data;
 		}
+
+		if (filter)
+		{
+			calc_sgsmooth(sensorsData[i].size(), sensorsData[i].data(), frame, order);
+		}
 	}
 
 	file.close();
+
+	//matlabExport(fileName.append(".m"), 0);
 }
 
 void SensorDataManager::matlabExport(string fileName, unsigned int dataIndex)

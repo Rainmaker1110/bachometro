@@ -10,14 +10,16 @@ void SensorDataProcessor::savgol(vector<double>& data)
 
 	sum = 0.0;
 
-	// 2/3
-	// -3 12 17 12 -3 35
-	// -2 3 6 7 6 3 -2 12
-	// -21 14 39 54 59 54 39 14 -21 231
+	/*
+	* 2/3
+	* -3 12 17 12 -3 35
+	* -2 3 6 7 6 3 -2 12
+	* -21 14 39 54 59 54 39 14 -21 231
 
-	// 4/5
-	// 5 -30 75 131 75 -30 5 231
-	// 15 -55 30 135 179 135 30 -55 15 429
+	* 4/5
+	* 5 -30 75 131 75 -30 5 231
+	* 15 -55 30 135 179 135 30 -55 15 429
+	*/
 
 	for (unsigned int i = 0; i < dataCopy.size(); i++)
 	{
@@ -34,8 +36,7 @@ void SensorDataProcessor::savgol(vector<double>& data)
 		sum = 0;
 	}
 
-	/*
-	for (int i = 0; i < size; i++)
+	/*for (int i = 0; i < size; i++)
 	{
 		sum += i - 3 < 0 ? 0.0 : 5.0 * data[i - 3];
 		sum += i - 2 < 0 ? 0.0 : -30.0 * data[i - 2];
@@ -52,13 +53,12 @@ void SensorDataProcessor::savgol(vector<double>& data)
 		qDebug() << data[i];
 
 		sum = 0;
-	}
-	*/
+	}*/
 }
 
 SensorDataProcessor::SensorDataProcessor()
 {
-
+	reset();
 }
 
 SensorDataProcessor::~SensorDataProcessor()
@@ -66,14 +66,24 @@ SensorDataProcessor::~SensorDataProcessor()
 
 }
 
-unsigned int SensorDataProcessor::getWindow()
+bool SensorDataProcessor::isDetected()
 {
-	return window;
+	return detected;
 }
 
-void SensorDataProcessor::setWindow(unsigned int window)
+void SensorDataProcessor::setDetected(bool detected)
 {
-	this->window = window;
+	this->detected = detected;
+}
+
+unsigned int SensorDataProcessor::getFrame()
+{
+	return frame;
+}
+
+void SensorDataProcessor::setFrame(unsigned int window)
+{
+	this->frame = window;
 }
 
 unsigned int SensorDataProcessor::getOrder()
@@ -86,13 +96,63 @@ void SensorDataProcessor::setOrder(unsigned int order)
 	this->order = order;
 }
 
-void SensorDataProcessor::setSensorData(char id, unsigned short * data)
+unsigned int SensorDataProcessor::getThreshold()
 {
-	/*for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+	return threshold;
+}
+
+void SensorDataProcessor::setThreshold(unsigned int threshold)
+{
+	this->threshold = threshold;
+}
+
+void SensorDataProcessor::reset()
+{
+	detected = false;
+
+	sensorsData.resize(SENSOR_TOTAL_SAMPLES, 0.0);
+	filterData.resize(SENSOR_TOTAL_SAMPLES, 0.0);
+
+	average = 0.0;
+	avgCount = 0;
+}
+
+void SensorDataProcessor::processData(unsigned short * data)
+{
+	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
 	{
-		sensorsData[i] = data[i];
-		filterData[i] = data[i];
+		sensorsData[i] = static_cast<double>(data[i]) / 58.27;
+		filterData[i] = sensorsData[i];
 	}
 
-	calc_sgsmooth(filterData.size(), filterData.data(), window, order);*/
+	calc_sgsmooth(filterData.size(), filterData.data(), frame, order);
+
+	if (avgCount < 5)
+	{
+		for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+		{
+			average += filterData[i];
+		}
+
+		avgCount++;
+
+		return;
+	}
+	else if (avgCount == 5)
+	{
+		average /= 505.0;
+		avgCount++;
+
+		return;
+	}
+
+	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
+	{
+		filterData[i] -= average;
+
+		if (filterData[i] >= threshold)
+		{
+			detected = true;
+		}
+	}
 }

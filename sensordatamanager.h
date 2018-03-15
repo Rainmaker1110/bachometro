@@ -17,6 +17,8 @@ class SensorDataManager
 		unsigned int frame;
 		unsigned int order;
 
+		unsigned int threshold;
+
 		vector<double> average;
 		vector<int> avgCount;
 
@@ -33,11 +35,14 @@ class SensorDataManager
 		bool isDetected();
 		void setDetected(bool filter);
 
-		unsigned int getWindow();
-		void setWindow(unsigned int frame);
+		unsigned int getFrame();
+		void setFrame(unsigned int frame);
 
 		unsigned int getOrder();
 		void setOrder(unsigned int order);
+
+		unsigned int getThreshold();
+		void setThreshold(unsigned int threshold);
 
 		unsigned int getSensosrNum();
 		void setSensorsNum(unsigned int sensorsNum);
