@@ -1,5 +1,5 @@
 /* Dummy data for avoiding Google Maps for caching the file */
-var src = 'http://rainmaker.host56.com/maps/potholes.json?dummy=' + (new Date()).getTime();;
+var src = 'https://rainmaker1110.000webhostapp.com/maps/potholes.json?dummy=' + (new Date()).getTime();;
 
 var infoWindow;
 
@@ -20,7 +20,7 @@ function initMap() {
 	map.data.loadGeoJson(src);
 
 	map.data.setStyle({
-		icon: 'http://rainmaker.host56.com/maps/img/skull.png'
+		icon: 'https://rainmaker1110.000webhostapp.com/maps/img/skull.png'
 	});
 
 	map.data.addListener('click', function(event){
