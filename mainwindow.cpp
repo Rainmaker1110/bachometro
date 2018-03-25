@@ -28,7 +28,7 @@ const QColor MainWindow::COLORS[] = {Qt::blue,
 									 Qt::yellow,
 									 Qt::gray};
 
-const string MainWindow::DEFAULT_HOST = "http://rainmaker.host56.com/maps/add_pothole.php";
+const string MainWindow::DEFAULT_HOST = "http://rainmaker1110.000webhostapp.com/maps/add_pothole.php";
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -109,6 +109,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	dataManager.setSensorsNum(DEFAULT_SENSOR_NUMBER);
 
 	dataProcessor.reset();
+	dataProcessor.setCoordsReg(&coordsReg);
 
 	coordsReg.setHost(DEFAULT_HOST);
 }

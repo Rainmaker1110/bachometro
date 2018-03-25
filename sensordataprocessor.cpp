@@ -1,3 +1,10 @@
+#include <string>
+#include <fstream>
+#include <sstream>
+
+#include <cstring>
+#include <ctime>
+
 #include "sensordataprocessor.h"
 
 #include "sgsmooth.h"
@@ -106,6 +113,10 @@ void SensorDataProcessor::setThreshold(unsigned int threshold)
 	this->threshold = threshold;
 }
 
+void SensorDataProcessor::setCoordsReg(CoordinatesRegister * coords) {
+	this->coords = coords;
+}
+
 void SensorDataProcessor::reset()
 {
 	detected = false;
@@ -146,13 +157,50 @@ void SensorDataProcessor::processData(unsigned short * data)
 		return;
 	}
 
+	int min = filterData[0] - average;
+
 	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
 	{
 		filterData[i] -= average;
 
-		if (filterData[i] >= threshold)
+		if (filterData[i] < min) {
+			min = filterData[i];
+		}
+
+		if (filterData[i] >= threshold && min - threshold < 5)
 		{
 			detected = true;
+
+			time (&rawtime);
+			timeinfo = localtime(&rawtime);
+
+			stringstream ss;
+			ss << "Detected_%d-%m-%Y_%I:%M:%S_";
+			ss << coords->getLat() << "," << coords->getLng();
+			ss << ".dat";
+
+			strcpy(filename, ss.str().c_str());
+
+			strftime(buffer,sizeof(buffer), filename ,timeinfo);
+			//qDebug() << filename;
+			std::string str(buffer);
+
+			ofstream detected(str, ofstream::out | ofstream::binary);
+
+			int size = 1;
+
+			detected.write(reinterpret_cast<char *>(&size), sizeof(int));
+
+			size = filterData.size();
+
+			detected.write(reinterpret_cast<char *>(&size), sizeof(int));
+
+			for (double & d : filterData)
+			{
+				detected.write(reinterpret_cast<char *>(&d), sizeof(double));
+			}
+
+			detected.close();
 		}
 	}
 }

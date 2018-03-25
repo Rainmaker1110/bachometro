@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "arduinodata.h"
+#include "coordinatesregister.h"
 
 using namespace std;
 
@@ -11,6 +12,11 @@ class SensorDataProcessor
 {
 	private:
 		bool detected;
+
+		time_t rawtime;
+		struct tm * timeinfo;
+		char buffer[150];
+		char * filename;
 
 		unsigned int frame;
 		unsigned int order;
@@ -22,6 +28,8 @@ class SensorDataProcessor
 
 		vector<double> sensorsData;
 		vector<double> filterData;
+
+		CoordinatesRegister * coords;
 
 	public:
 		static void savgol(vector<double>& data);
@@ -40,6 +48,8 @@ class SensorDataProcessor
 
 		unsigned int getThreshold();
 		void setThreshold(unsigned int threshold);
+
+		void setCoordsReg(CoordinatesRegister * coords);
 
 		void reset();
 		void processData(unsigned short * data);
