@@ -16,7 +16,7 @@ class SensorDataProcessor
 		time_t rawtime;
 		struct tm * timeinfo;
 		char buffer[150];
-		char * filename;
+		char filename[150];
 
 		unsigned int frame;
 		unsigned int order;
