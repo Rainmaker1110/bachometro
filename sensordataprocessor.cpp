@@ -157,17 +157,11 @@ void SensorDataProcessor::processData(unsigned short * data)
 		return;
 	}
 
-	int min = filterData[0] - average;
-
 	for (unsigned int i = 0; i < SENSOR_TOTAL_SAMPLES; i++)
 	{
 		filterData[i] -= average;
 
-		if (filterData[i] < min) {
-			min = filterData[i];
-		}
-
-		if (filterData[i] >= threshold && min - threshold < 5)
+		if (filterData[i] >= threshold)
 		{
 			detected = true;
 
@@ -195,10 +189,7 @@ void SensorDataProcessor::processData(unsigned short * data)
 
 			detected.write(reinterpret_cast<char *>(&size), sizeof(int));
 
-			for (double & d : filterData)
-			{
-				detected.write(reinterpret_cast<char *>(&d), sizeof(double));
-			}
+			detected.write(reinterpret_cast<char *>(filterData.data()), size);
 
 			detected.close();
 		}
